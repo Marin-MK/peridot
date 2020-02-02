@@ -1,0 +1,72 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.0": {
+      "odlgss/1.0.0": {
+        "dependencies": {
+          "RubyDotNET": "1.0.0",
+          "odl": "0.1.0",
+          "SDL2-CS.Reference": "0.0.0.0"
+        },
+        "runtime": {
+          "odlgss.dll": {}
+        }
+      },
+      "SDL2-CS/2.0.0": {},
+      "odl/0.1.0": {
+        "dependencies": {
+          "SDL2-CS": "2.0.0"
+        },
+        "runtime": {
+          "odl.dll": {}
+        }
+      },
+      "RubyDotNET/1.0.0": {
+        "runtime": {
+          "RubyDotNET.dll": {}
+        }
+      },
+      "SDL2-CS.Reference/0.0.0.0": {
+        "runtime": {
+          "SDL2-CS.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "odlgss/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SDL2-CS/2.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-W7T4y+lMs7Wm/94dGggRxJYqxX5N6uuxuxw5ob/H34fnaoUwgoG0s+P7xzqsGXUc1cbCAjnShs21FdeFUnPlHA==",
+      "path": "sdl2-cs/2.0.0",
+      "hashPath": "sdl2-cs.2.0.0.nupkg.sha512"
+    },
+    "odl/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "RubyDotNET/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SDL2-CS.Reference/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
