@@ -12,41 +12,87 @@ namespace odlgss
 
         static void Main(string[] args)
         {
-            MainWindow = new Window();
-            MainWindow.SetResizable(false);
-            MainWindow.SetSize(512, 384);
-            MainWindow.Show();
-
             Internal.Initialize();
 
-            Graphics.CreateClass();
+            Graphics.CreateModule();
+            Input.CreateModule();
+            Audio.CreateModule();
             Sprite.CreateClass();
             Rect.CreateClass();
             Viewport.CreateClass();
-            Table.CreateClass();
             Bitmap.CreateClass();
             Color.CreateClass();
+            Tone.CreateClass();
             Font.CreateClass();
 
-            Graphics.Width = MainWindow.Width;
-            Graphics.Height = MainWindow.Height;
+            int Width = 512;
+            int Height = 384;
+            Graphics.Width = Width;
+            Graphics.Height = Height;
+            ODL.Font.FontPath = "D:/Desktop/MK/mk/fonts";
+            Internal.rb_const_set(Internal.rb_cObject.Pointer, Internal.rb_intern("SCREENWIDTH"), Internal.LONG2NUM(Graphics.Width));
+            Internal.rb_const_set(Internal.rb_cObject.Pointer, Internal.rb_intern("SCREENHEIGHT"), Internal.LONG2NUM(Graphics.Height));
 
-            while (Looping && ODL.Graphics.CanUpdate()) Loop();
-        }
+            ODL.Graphics.Start();
 
-        public static void Debug()
-        {
-            Viewport v = new Viewport(0, 0, 512, 384);
-            ODL.Sprite s = new ODL.Sprite(v.ViewportObject, new SolidBitmap(999, 999, new ODL.Color(255, 0, 0)));
-            Internal.SetGlobalVariable("$v", v.Pointer);
-        }
-
-        public static void Loop()
-        {
-            ODL.Graphics.Update();
-            if (Input.Trigger(SDL_Keycode.SDLK_RETURN))
+            MainWindow = new Window();
+            MainWindow.SetResizable(false);
+            MainWindow.SetSize(Width, Height);
+            MainWindow.Show();
+            MainWindow.OnClosed += delegate (object sender, ClosedEventArgs e)
             {
-                Debug();
+                ODL.Graphics.Stop();
+            };
+
+            Graphics.Start();
+
+            // Sets extension load paths and working directory
+            PrepareLoadPath();
+
+            // Runs the script and returns raises a RuntimeError when window is closed.
+            LoadScript("D:/Desktop/MK/mk/ruby/scripts/requires.rb");
+        }
+
+        public static void PrepareLoadPath()
+        {
+            IntPtr var = Internal.rb_gv_get("$LOAD_PATH");
+            Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0"));
+            Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0\\i386-mingw32"));
+            Internal.Eval("Dir.chdir 'D:/Desktop/MK/mk'");
+        }
+
+        public static void LoadScript(string File)
+        {
+            Internal.DangerousFunction call = delegate (IntPtr Arg)
+            {
+                Internal.rb_require(File);
+                return IntPtr.Zero;
+            };
+            IntPtr state = IntPtr.Zero;
+            Internal.rb_protect(call, IntPtr.Zero, out state);
+            if (state != IntPtr.Zero) // Error
+            {
+                IntPtr Err = Internal.rb_errinfo();
+                Internal.rb_gv_set("$x", Err);
+                Internal.Eval("p $x");
+                Internal.Eval(@"type = $x.class.to_s
+msg = type + ': ' + $x.to_s + ""\n""
+for i in 0...$x.backtrace.size
+  line = $x.backtrace[i].sub(Dir.pwd,'')
+  colons = line.split(':')
+  msg << 'Line ' + colons[1] + ' in ' + colons[0] + ': '
+  for j in 2...colons.size
+    if colons[j].size > 3 && colons[j][0] == 'i' && colons[j][1] == 'n' && colons[j][2] == ' '
+      colons[j] = colons[j].sub(/in /,'')
+    end
+    msg << colons[j]
+    msg << ':' if j != colons.size - 1
+  end
+  msg << ""\n"" if i != $x.backtrace.size - 1
+end
+print msg"); // Print error
+                Internal.rb_gv_set("$x", Internal.QNil);
+                Internal.rb_set_errinfo(Internal.QNil);
             }
         }
     }

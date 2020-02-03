@@ -4,7 +4,8 @@ using System.Text;
 
 namespace odlgss
 {
-    class Config
+    public static class Config
     {
+        public static bool AutoLock = true;
     }
 }

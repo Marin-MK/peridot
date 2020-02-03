@@ -4,15 +4,15 @@ using RubyDotNET;
 
 namespace odlgss
 {
-    public class Color : RubyObject
+    public class Tone : RubyObject
     {
-        public ODL.Color ColorObject;
+        public ODL.Tone ToneObject;
         public static IntPtr ClassPointer;
-        public static Dictionary<IntPtr, Color> Colors = new Dictionary<IntPtr, Color>();
+        public static Dictionary<IntPtr, Tone> Tones = new Dictionary<IntPtr, Tone>();
 
         public static Class CreateClass()
         {
-            Class c = new Class("Color");
+            Class c = new Class("Tone");
             ClassPointer = c.Pointer;
             c.DefineClassMethod("new", New);
             c.DefineMethod("initialize", initialize);
@@ -22,109 +22,108 @@ namespace odlgss
             c.DefineMethod("green=", greenset);
             c.DefineMethod("blue", blueget);
             c.DefineMethod("blue=", blueset);
-            c.DefineMethod("alpha", alphaget);
-            c.DefineMethod("alpha=", alphaset);
+            c.DefineMethod("gray", grayget);
+            c.DefineMethod("gray=", grayset);
             return c;
         }
 
-        private Color()
+        private Tone()
         {
             this.Pointer = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("allocate"), 0);
-            Colors[Pointer] = this;
+            Tones[Pointer] = this;
         }
 
-        public static Color New(byte Red, byte Green, byte Blue, byte Alpha = 255)
+        public static Tone New(sbyte Red, sbyte Green, sbyte Blue, byte Gray = 0)
         {
             IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 4,
                 Internal.LONG2NUM(Red),
                 Internal.LONG2NUM(Green),
                 Internal.LONG2NUM(Blue),
-                Internal.LONG2NUM(Alpha)
+                Internal.LONG2NUM(Gray)
             );
-            return Colors[ptr];
+            return Tones[ptr];
         }
-        public void Initialize(byte Red, byte Green, byte Blue, byte Alpha = 255)
+        public void Initialize(sbyte Red, sbyte Green, sbyte Blue, byte Gray = 0)
         {
-            ColorObject = new ODL.Color(Red, Green, Blue, Alpha);
+            ToneObject = new ODL.Tone(Red, Green, Blue, Gray);
             this.Red = Red;
             this.Green = Green;
             this.Blue = Blue;
-            this.Alpha = Alpha;
+            this.Gray = Gray;
         }
 
-        public byte Red
+        public sbyte Red
         {
             get
             {
-                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("red"), 0));
+                return (sbyte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("red"), 0));
             }
             set
             {
                 Internal.rb_funcallv(Pointer, Internal.rb_intern("red="), 1, Internal.LONG2NUM(value));
             }
         }
-        public byte Green
+        public sbyte Green
         {
             get
             {
-                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("green"), 0));
+                return (sbyte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("green"), 0));
             }
             set
             {
                 Internal.rb_funcallv(Pointer, Internal.rb_intern("green="), 1, Internal.LONG2NUM(value));
             }
         }
-        public byte Blue
+        public sbyte Blue
         {
             get
             {
-                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("blue"), 0));
+                return (sbyte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("blue"), 0));
             }
             set
             {
                 Internal.rb_funcallv(Pointer, Internal.rb_intern("blue="), 1, Internal.LONG2NUM(value));
             }
         }
-        public byte Alpha
+        public byte Gray
         {
             get
             {
-                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("alpha"), 0));
+                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("gray"), 0));
             }
             set
             {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("alpha="), 1, Internal.LONG2NUM(value));
+                Internal.rb_funcallv(Pointer, Internal.rb_intern("gray="), 1, Internal.LONG2NUM(value));
             }
         }
 
         static IntPtr New(IntPtr _self, IntPtr _args)
         {
-            Color c = new Color();
+            Tone t = new Tone();
             RubyArray Args = new RubyArray(_args);
             IntPtr[] newargs = new IntPtr[Args.Length];
             for (int i = 0; i < Args.Length; i++) newargs[i] = Args[i].Pointer;
-            Internal.rb_funcallv(c.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
-            return c.Pointer;
+            Internal.rb_funcallv(t.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
+            return t.Pointer;
         }
         static IntPtr initialize(IntPtr _self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
 
-            Color c = Colors[_self];
+            Tone t = Tone.Tones[_self];
             if (Args.Length == 3 || Args.Length == 4)
             {
                 int r = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
                 int g = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
                 int b = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0));
-                int a = 255;
-                if (Args.Length == 4) a = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0));
-                c.Initialize((byte) r, (byte) g, (byte) b, (byte) a);
+                int gr = 0;
+                if (Args.Length == 4) gr = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0));
+                t.Initialize((sbyte) r, (sbyte) g, (sbyte) b, (byte) gr);
             }
             else
             {
                 ScanArgs(3, Args);
             }
-
             return _self;
         }
 
@@ -136,7 +135,7 @@ namespace odlgss
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Colors[_self].ColorObject.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            Tones[_self].ToneObject.Red = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
             return Internal.rb_ivar_set(_self, Internal.rb_intern("@red"), Args[0].Pointer);
         }
 
@@ -148,7 +147,7 @@ namespace odlgss
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Colors[_self].ColorObject.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            Tones[_self].ToneObject.Green = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
             return Internal.rb_ivar_set(_self, Internal.rb_intern("@green"), Args[0].Pointer);
         }
 
@@ -160,20 +159,20 @@ namespace odlgss
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Colors[_self].ColorObject.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            Tones[_self].ToneObject.Blue = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
             return Internal.rb_ivar_set(_self, Internal.rb_intern("@blue"), Args[0].Pointer);
         }
 
-        static IntPtr alphaget(IntPtr _self, IntPtr _args)
+        static IntPtr grayget(IntPtr _self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@alpha"));
+            return Internal.rb_ivar_get(_self, Internal.rb_intern("@gray"));
         }
-        static IntPtr alphaset(IntPtr _self, IntPtr _args)
+        static IntPtr grayset(IntPtr _self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Colors[_self].ColorObject.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@alpha"), Args[0].Pointer);
+            Tones[_self].ToneObject.Gray = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.rb_ivar_set(_self, Internal.rb_intern("@gray"), Args[0].Pointer);
         }
     }
 }
