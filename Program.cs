@@ -51,6 +51,10 @@ namespace odlgss
 
             // Runs the script and returns raises a RuntimeError when window is closed.
             LoadScript("D:/Desktop/MK/mk/ruby/scripts/requires.rb");
+
+            //MainFunc();
+
+            if (!MainWindow.Closed) MainWindow.Close();
         }
 
         public static void PrepareLoadPath()
@@ -59,6 +63,19 @@ namespace odlgss
             Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0"));
             Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0\\i386-mingw32"));
             Internal.Eval("Dir.chdir 'D:/Desktop/MK/mk'");
+        }
+
+        public static void MainFunc()
+        {
+            while (ODL.Graphics.CanUpdate())
+            {
+                Input.Update();
+                Graphics.Update();
+                if (Input.Trigger((long) SDL_Keycode.SDLK_RETURN))
+                {
+                    
+                }
+            }
         }
 
         public static void LoadScript(string File)
@@ -74,6 +91,8 @@ namespace odlgss
             {
                 IntPtr Err = Internal.rb_errinfo();
                 Internal.rb_gv_set("$x", Err);
+                bool Handled = Internal.Eval("$x.is_a?(SystemExit)") == Internal.QTrue;
+                if (Handled) return;
                 Internal.Eval("p $x");
                 Internal.Eval(@"type = $x.class.to_s
 msg = type + ': ' + $x.to_s + ""\n""

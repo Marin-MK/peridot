@@ -40,7 +40,8 @@ namespace odlgss
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return ODL.Input.Trigger((SDL2.SDL.SDL_Keycode) Internal.NUM2LONG(Args[0].Pointer)) ? Internal.QTrue : Internal.QFalse;
+            SDL2.SDL.SDL_Keycode key = (SDL2.SDL.SDL_Keycode) Internal.NUM2LONG(Args[0].Pointer);
+            return ODL.Input.Trigger(key) ? Internal.QTrue : Internal.QFalse;
         }
 
         static IntPtr press(IntPtr _self, IntPtr _args)

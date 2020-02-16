@@ -8,14 +8,32 @@ namespace odlgss
         public static IntPtr ModulePointer;
         public static Viewport MainViewport;
 
-        public static int Framerate = 120;
-        public static int TicksPerFrame = (int) Math.Round(1000d / Framerate);
+        public static int FrameRate
+        {
+            get
+            {
+                return (int) Internal.NUM2LONG(Internal.rb_funcallv(ModulePointer, Internal.rb_intern("frame_rate"), 0));
+            }
+            set
+            {
+                Internal.rb_funcallv(ModulePointer, Internal.rb_intern("frame_rate="), 1, Internal.LONG2NUM(value));
+            }
+        }
+        public static int TicksPerFrame
+        {
+            get
+            {
+                return (int) Math.Round(1000d / FrameRate);
+            }
+        }
 
         public static Module CreateModule()
         {
             Module m = new Module("Graphics");
             ModulePointer = m.Pointer;
             m.DefineClassMethod("update", update);
+            m.DefineClassMethod("frame_rate", frame_rateget);
+            m.DefineClassMethod("frame_rate=", frame_rateset);
             m.DefineClassMethod("width", widthget);
             m.DefineClassMethod("width=", widthset);
             m.DefineClassMethod("height", heightget);
@@ -35,6 +53,7 @@ namespace odlgss
             Font.DefaultItalic = false;
             Font.DefaultOutline = false;
             Font.DefaultColor = Color.New(255, 255, 255);
+            Graphics.FrameRate = 60;
             FPSTimer.Start();
         }
 
@@ -69,7 +88,7 @@ namespace odlgss
 
         static IntPtr update(IntPtr _self, IntPtr _args)
         {
-            if (!ODL.Graphics.Initialized) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "game stopped");
+            if (!ODL.Graphics.Initialized) Internal.rb_raise(Internal.rb_eSystemExit.Pointer, "game stopped");
 
             FrameTimer.Start();
 
@@ -82,7 +101,6 @@ namespace odlgss
             double avgFPS = CountedFrames / (FPSTimer.Ticks / 1000d);
 
             ODL.Graphics.UpdateGraphics(true);
-
             CountedFrames++;
 
             uint frameTicks = FrameTimer.Ticks;
@@ -91,6 +109,17 @@ namespace odlgss
                 SDL2.SDL.SDL_Delay((uint) (TicksPerFrame - frameTicks));
             }
             return _self;
+        }
+
+        static IntPtr frame_rateget(IntPtr _self, IntPtr _args)
+        {
+            return Internal.rb_ivar_get(_self, Internal.rb_intern("@frame_rate"));
+        }
+        static IntPtr frame_rateset(IntPtr _self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.rb_ivar_set(_self, Internal.rb_intern("@frame_rate"), Args[0].Pointer);
         }
 
         static IntPtr widthget(IntPtr _self, IntPtr _args)
