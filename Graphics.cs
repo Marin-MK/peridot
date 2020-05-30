@@ -1,22 +1,25 @@
 ﻿using System;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Graphics : RubyObject
     {
-        public static IntPtr ModulePointer;
-        public static Viewport MainViewport;
+        public static IntPtr Module;
+        public static IntPtr MainViewport;
+        public static IntPtr OverlayViewport;
+        public static IntPtr OverlaySprite;
+        public static IntPtr OverlayBitmap;
 
         public static int FrameRate
         {
             get
             {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(ModulePointer, Internal.rb_intern("frame_rate"), 0));
+                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Module, Internal.rb_intern("frame_rate"), 0));
             }
             set
             {
-                Internal.rb_funcallv(ModulePointer, Internal.rb_intern("frame_rate="), 1, Internal.LONG2NUM(value));
+                Internal.rb_funcallv(Module, Internal.rb_intern("frame_rate="), 1, Internal.LONG2NUM(value));
             }
         }
         public static int TicksPerFrame
@@ -30,14 +33,19 @@ namespace odlgss
         public static Module CreateModule()
         {
             Module m = new Module("Graphics");
-            ModulePointer = m.Pointer;
-            m.DefineClassMethod("update", update);
+            Module = m.Pointer;
             m.DefineClassMethod("frame_rate", frame_rateget);
             m.DefineClassMethod("frame_rate=", frame_rateset);
             m.DefineClassMethod("width", widthget);
             m.DefineClassMethod("width=", widthset);
             m.DefineClassMethod("height", heightget);
             m.DefineClassMethod("height=", heightset);
+            m.DefineClassMethod("brightness", brightnessget);
+            m.DefineClassMethod("brightness=", brightnessset);
+            m.DefineClassMethod("frame_count", frame_countget);
+            m.DefineClassMethod("frame_count=", frame_countset);
+            m.DefineClassMethod("update", update);
+            m.DefineClassMethod("wait", wait);
             return m;
         }
 
@@ -46,62 +54,142 @@ namespace odlgss
 
         public static void Start()
         {
-            MainViewport = Viewport.New(0, 0, Width, Height);
-            Font.DefaultName = "arial";
-            Font.DefaultSize = 22;
-            Font.DefaultBold = false;
-            Font.DefaultItalic = false;
-            Font.DefaultOutline = false;
-            Font.DefaultColor = Color.New(255, 255, 255);
-            Graphics.FrameRate = 60;
+            ODL.Viewport.DefaultRenderer = ODL.Graphics.Windows[0].Renderer;
+            MainViewport = Internal.rb_funcallv(Viewport.Class, Internal.rb_intern("new"), 4, new IntPtr[4]
+            {
+                Internal.LONG2NUM(0),
+                Internal.LONG2NUM(0),
+                Internal.GetIVar(Module, "@width"),
+                Internal.GetIVar(Module, "@height")
+            });
+            Internal.SetIVar(Font.Class, "@default_name", Internal.rb_str_new_cstr("arial"));
+            Internal.SetIVar(Font.Class, "@default_size", Internal.LONG2NUM(32));
+            Internal.SetIVar(Font.Class, "@default_color", Color.CreateColor(ODL.Color.WHITE));
+            Internal.SetIVar(Font.Class, "@default_outline", Internal.QFalse);
+            Internal.SetIVar(Font.Class, "@default_outline_color", Color.CreateColor(ODL.Color.BLACK));
+            OverlayViewport = Internal.rb_funcallv(Viewport.Class, Internal.rb_intern("new"), 4, new IntPtr[4]
+            {
+                Internal.LONG2NUM(0),
+                Internal.LONG2NUM(0),
+                Internal.GetIVar(Module, "@width"),
+                Internal.GetIVar(Module, "@height")
+            });
+            Internal.SetGlobalVariable("$__overlay_viewport__", OverlayViewport);
+            Internal.rb_funcallv(OverlayViewport, Internal.rb_intern("z="), 1, new IntPtr[1] { Internal.LONG2NUM(999999999) });
+            OverlaySprite = Internal.rb_funcallv(Sprite.Class, Internal.rb_intern("new"), 1, new IntPtr[1] { OverlayViewport });
+            Internal.SetGlobalVariable("$__overlay_sprite__", OverlaySprite);
+            OverlayBitmap = Internal.rb_funcallv(Bitmap.Class, Internal.rb_intern("new"), 2, new IntPtr[2]
+            {
+                Internal.GetIVar(Module, "@width"),
+                Internal.GetIVar(Module, "@height")
+            });
+            Internal.SetGlobalVariable("$__overlay_bitmap__", OverlayBitmap);
+            Internal.rb_funcallv(OverlaySprite, Internal.rb_intern("bitmap="), 1, new IntPtr[1] { OverlayBitmap });
+            Internal.rb_funcallv(OverlaySprite, Internal.rb_intern("opacity="), 1, new IntPtr[1] { Internal.LONG2NUM(0) });
+            Internal.rb_funcallv(OverlaySprite, Internal.rb_intern("z="), 1, new IntPtr[1] { Internal.LONG2NUM(999999999) });
+            Internal.rb_funcallv(OverlayBitmap, Internal.rb_intern("fill_rect"), 5, new IntPtr[5]
+            {
+                Internal.LONG2NUM(0),
+                Internal.LONG2NUM(0),
+                Internal.GetIVar(Module, "@width"),
+                Internal.GetIVar(Module, "@height"),
+                Color.CreateColor(ODL.Color.BLACK)
+            });
+            Internal.SetGlobalVariable("$__mainvp__", MainViewport);
+            Internal.SetGlobalVariable("$Peridot", Internal.QTrue);
+            Internal.SetIVar(Module, "@brightness", Internal.LONG2NUM(255));
+            Internal.SetIVar(Module, "@frame_count", Internal.LONG2NUM(0));
+            FrameRate = Config.FrameRate;
             FPSTimer.Start();
         }
 
-        public static int CountedFrames = 0;
-
-        public static void Update()
+        protected static IntPtr frame_rateget(IntPtr self, IntPtr _args)
         {
-            Internal.rb_funcallv(ModulePointer, Internal.rb_intern("update"), 0);
-        }
-        public static int Width
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(ModulePointer, Internal.rb_intern("width"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(ModulePointer, Internal.rb_intern("width="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public static int Height
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(ModulePointer, Internal.rb_intern("height"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(ModulePointer, Internal.rb_intern("height="), 1, Internal.LONG2NUM(value));
-            }
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@frame_rate");
         }
 
-        static IntPtr update(IntPtr _self, IntPtr _args)
+        protected static IntPtr frame_rateset(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@frame_rate", Args[0].Pointer);
+        }
+
+        protected static IntPtr widthget(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@width");
+        }
+
+        protected static IntPtr widthset(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@width", Args[0].Pointer);
+        }
+
+        protected static IntPtr heightget(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@height");
+        }
+
+        protected static IntPtr heightset(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@height", Args[0].Pointer);
+        }
+
+        protected static IntPtr brightnessget(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@brightness");
+        }
+
+        protected static IntPtr brightnessset(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            Internal.rb_funcallv(OverlaySprite, Internal.rb_intern("opacity="), 1, new IntPtr[1] { Internal.LONG2NUM(255 - Internal.NUM2LONG(Args[0].Pointer)) });
+            return Internal.SetIVar(self, "@brightness", Args[0].Pointer);
+        }
+
+        protected static IntPtr frame_countget(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@frame_count");
+        }
+
+        protected static IntPtr frame_countset(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@frame_count", Args[0].Pointer);
+        }
+
+        protected static IntPtr update(IntPtr _self, IntPtr _args)
         {
             if (!ODL.Graphics.Initialized) Internal.rb_raise(Internal.rb_eSystemExit.Pointer, "game stopped");
 
             FrameTimer.Start();
 
-            SDL2.SDL.SDL_Event e;
-            while (SDL2.SDL.SDL_PollEvent(out e) > 0)
+            ODL.Graphics.UpdateInput();
+            ODL.Graphics.UpdateWindows();
+            try
             {
-                ODL.Graphics.EvaluateEvent(e);
+                ODL.Graphics.UpdateGraphics(true);
             }
-
-            double avgFPS = CountedFrames / (FPSTimer.Ticks / 1000d);
-
-            ODL.Graphics.UpdateGraphics(true);
-            CountedFrames++;
+            catch (ODL.BitmapLockedException)
+            {
+                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "attempted to render a still unlocked bitmap");
+            }
 
             uint frameTicks = FrameTimer.Ticks;
             if (frameTicks < TicksPerFrame)
@@ -111,37 +199,12 @@ namespace odlgss
             return _self;
         }
 
-        static IntPtr frame_rateget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@frame_rate"));
-        }
-        static IntPtr frame_rateset(IntPtr _self, IntPtr _args)
+        protected static IntPtr wait(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@frame_rate"), Args[0].Pointer);
-        }
-
-        static IntPtr widthget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@width"));
-        }
-        static IntPtr widthset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@width"), Args[0].Pointer);
-        }
-
-        static IntPtr heightget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@height"));
-        }
-        static IntPtr heightset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@height"), Args[0].Pointer);
+            SDL2.SDL.SDL_Delay((uint) (TicksPerFrame * Internal.NUM2LONG(Args[0].Pointer)));
+            return Internal.QNil;
         }
     }
 

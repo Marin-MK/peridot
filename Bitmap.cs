@@ -1,351 +1,367 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Bitmap : RubyObject
     {
-        public ODL.Bitmap BitmapObject;
-        public static IntPtr ClassPointer;
-        public static Dictionary<IntPtr, Bitmap> Bitmaps = new Dictionary<IntPtr, Bitmap>();
+        public static IntPtr Class;
+        public static Dictionary<IntPtr, ODL.Bitmap> BitmapDictionary = new Dictionary<IntPtr, ODL.Bitmap>();
 
         public static Class CreateClass()
         {
             Class c = new Class("Bitmap");
-            ClassPointer = c.Pointer;
-            c.DefineClassMethod("new", New);
+            Class = c.Pointer;
+            c.DefineClassMethod("new", _new);
             c.DefineMethod("initialize", initialize);
-            c.DefineMethod("width", width);
-            c.DefineMethod("height", height);
-            c.DefineMethod("rect", rect);
+            c.DefineMethod("width", widthget);
+            c.DefineMethod("height", heightget);
             c.DefineMethod("font", fontget);
             c.DefineMethod("font=", fontset);
+            c.DefineMethod("autolock", autolockget);
+            c.DefineMethod("autolock=", autolockset);
+            c.DefineMethod("unlock", unlockbmp);
+            c.DefineMethod("lock", lockbmp);
             c.DefineMethod("get_pixel", get_pixel);
             c.DefineMethod("set_pixel", set_pixel);
+            c.DefineMethod("draw_line", draw_line);
+            c.DefineMethod("draw_rect", draw_rect);
             c.DefineMethod("fill_rect", fill_rect);
-            c.DefineMethod("draw_text", draw_text);
+            c.DefineMethod("blt", blt);
             c.DefineMethod("text_size", text_size);
+            c.DefineMethod("draw_text", draw_text);
             c.DefineMethod("clear", clear);
             c.DefineMethod("dispose", dispose);
             c.DefineMethod("disposed?", disposed);
             return c;
         }
 
-        private Bitmap()
+        protected static IntPtr allocate(IntPtr Class)
         {
-            this.Pointer = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("allocate"), 0);
-            Bitmaps[Pointer] = this;
+            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
         }
 
-        public static Bitmap New(string File)
+        protected static IntPtr _new(IntPtr self, IntPtr _args)
         {
-            IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 1, Internal.rb_str_new_cstr(File));
-            return Bitmaps[ptr];
-        }
-        public void Initialize(string File)
-        {
-            BitmapObject = new ODL.Bitmap(File);
-            Internal.rb_ivar_set(Pointer, Internal.rb_intern("@width"), Internal.LONG2NUM(BitmapObject.Width));
-            Internal.rb_ivar_set(Pointer, Internal.rb_intern("@height"), Internal.LONG2NUM(BitmapObject.Height));
-            this.Font = Font.New();
-            BitmapObject.Font = this.Font.FontObject;
-        }
-
-        public static Bitmap New(int Width, int Height)
-        {
-            IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 2,
-                Internal.LONG2NUM(Width),
-                Internal.LONG2NUM(Height)
-            );
-            return Bitmaps[ptr];
-        }
-        public void Initialize(int Width, int Height)
-        {
-            BitmapObject = new ODL.Bitmap(Width, Height);
-            Internal.rb_ivar_set(Pointer, Internal.rb_intern("@width"), Internal.LONG2NUM(Width));
-            Internal.rb_ivar_set(Pointer, Internal.rb_intern("@height"), Internal.LONG2NUM(Height));
-            this.Font = Font.New();
-            BitmapObject.Font = this.Font.FontObject;
-        }
-
-        public int Width
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("width"), 0));
-            }
-        }
-        public int Height
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("height"), 0));
-            }
-        }
-        public Font Font
-        { 
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("font"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Font.Fonts[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("font="), 1, value.Pointer);
-            }
-        }
-        public Color GetPixel(int X, int Y)
-        {
-            IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("get_pixel"), 2, Internal.LONG2NUM(X), Internal.LONG2NUM(Y));
-            return Color.Colors[ptr];
-        }
-        public void SetPixel(int X, int Y, Color c)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("set_pixel"), 3, Internal.LONG2NUM(X), Internal.LONG2NUM(Y), c.Pointer);
-        }
-        public void FillRect(Rect r, Color c)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("fill_rect"), 2, r.Pointer, c.Pointer);
-        }
-        public void FillRect(int X, int Y, int Width, int Height, Color c)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("fill_rect"), 5, 
-                Internal.LONG2NUM(X), Internal.LONG2NUM(Y), Internal.LONG2NUM(Width), Internal.LONG2NUM(Height), c.Pointer);
-        }
-        public void DrawText(Rect r, string Text, int Align = 0)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("draw_text"), 6,
-                r.Pointer,
-                Internal.rb_str_new_cstr(Text),
-                Internal.LONG2NUM(Align)
-            );
-        }
-        public void DrawText(int X, int Y, int Width, int Height, string Text, int Align = 0)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("draw_text"), 6,
-                Internal.LONG2NUM(X),
-                Internal.LONG2NUM(Y),
-                Internal.LONG2NUM(Width),
-                Internal.LONG2NUM(Height),
-                Internal.rb_str_new_cstr(Text),
-                Internal.LONG2NUM(Align)
-            );
-        }
-        public Rect TextSize(string Text)
-        {
-            IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("text_size"), 1, Internal.rb_str_new_cstr(Text));
-            return Rect.Rects[ptr];
-        }
-        public void Dispose()
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("dispose"), 0);
-        }
-        public bool Disposed
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("disposed?"), 0) == Internal.QTrue;
-            }
-        }
-
-        static IntPtr New(IntPtr _self, IntPtr _args)
-        {
-            Bitmap b = new Bitmap();
             RubyArray Args = new RubyArray(_args);
-            IntPtr[] newargs = new IntPtr[Args.Length];
-            for (int i = 0; i < Args.Length; i++) newargs[i] = Args[i].Pointer;
-            Internal.rb_funcallv(b.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
-            return b.Pointer;
+            IntPtr obj = allocate(self);
+            IntPtr[] newargs = Args.Rubify();
+            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
+            return obj;
         }
-        static IntPtr initialize(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr initialize(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
 
-            Bitmap b = Bitmaps[_self];
-            if (Args.Length == 1) // File
+            ODL.Bitmap bmp = null;
+            if (Args.Length == 1)
             {
-                string file = new RubyString(Args[0].Pointer).ToString();
-                b.Initialize(file);
+                if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[1] { Class }) == Internal.QTrue)
+                {
+                    bmp = Bitmap.BitmapDictionary[Args[0].Pointer];
+                }
+                else
+                {
+                    bmp = new ODL.Bitmap(new RubyString(Args[0].Pointer).ToString());
+                }
             }
             else if (Args.Length == 2)
             {
-                int w = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-                int h = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-                b.Initialize(w, h);
+                bmp = new ODL.Bitmap(
+                    (int) Internal.NUM2LONG(Args[0].Pointer),
+                    (int) Internal.NUM2LONG(Args[1].Pointer)
+                );
             }
-            else
+            else ScanArgs(1, Args);
+            Internal.SetIVar(self, "@width", Internal.LONG2NUM(bmp.Width));
+            Internal.SetIVar(self, "@height", Internal.LONG2NUM(bmp.Height));
+            Internal.SetIVar(self, "@autolock", Internal.QTrue);
+            Internal.SetIVar(self, "@font", Font.CreateFont());
+
+            if (BitmapDictionary.ContainsKey(self)) dispose(self, IntPtr.Zero);
+            BitmapDictionary.Add(self, bmp);
+            return self;
+        }
+
+        protected static IntPtr AutoUnlock(IntPtr self)
+        {
+            if (autolockget(self, IntPtr.Zero) == Internal.QTrue)
             {
-                ScanArgs(1, Args);
+                BitmapDictionary[self].Unlock();
+                return Internal.QTrue;
             }
-
-            return _self;
+            else if (BitmapDictionary[self].Locked)
+            {
+                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "bitmap locked for writing");
+            }
+            return Internal.QFalse;
         }
 
-        static IntPtr width(IntPtr _self, IntPtr _args)
+        protected static IntPtr AutoLock(IntPtr self)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@width"));
+            if (autolockget(self, IntPtr.Zero) == Internal.QTrue)
+            {
+                BitmapDictionary[self].Lock();
+                return Internal.QTrue;
+            }
+            return Internal.QFalse;
         }
 
-        static IntPtr height(IntPtr _self, IntPtr _args)
+        protected static IntPtr widthget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@height"));
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@width");
         }
 
-        static IntPtr rect(IntPtr _self, IntPtr _args)
+        protected static IntPtr heightget(IntPtr self, IntPtr _args)
         {
-            return Rect.New(0, 0, Bitmap.Bitmaps[_self].Width, Bitmap.Bitmaps[_self].Height).Pointer;
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@height");
         }
 
-        static IntPtr fontget(IntPtr _self, IntPtr _args)
+        protected static IntPtr fontget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@font"));
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@font");
         }
-        static IntPtr fontset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr fontset(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            IntPtr Value = Internal.rb_ivar_set(_self, Internal.rb_intern("@font"), Args[0].Pointer);
-            Bitmap.Bitmaps[_self].BitmapObject.Font = Font.Fonts[Args[0].Pointer].FontObject;
-            return Value;
+            return Internal.SetIVar(self, "@font", Args[0].Pointer);
         }
 
-        static IntPtr get_pixel(IntPtr _self, IntPtr _args)
+        protected static IntPtr autolockget(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
+            if (_args != IntPtr.Zero)
+            {
+                RubyArray Args = new RubyArray(_args);
+                ScanArgs(0, Args);
+            }
+            return Internal.GetIVar(self, "@autolock");
+        }
+
+        protected static IntPtr autolockset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@autolock", Args[0].Pointer);
+        }
+
+        protected static IntPtr unlockbmp(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            if (Internal.GetIVar(self, "@autolock") == Internal.QTrue) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "manual unlocking disallowed with autolock enabled");
+            else if (!BitmapDictionary[self].Locked) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "bitmap already unlocked");
+            BitmapDictionary[self].Unlock();
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr lockbmp(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            if (Internal.GetIVar(self, "@autolock") == Internal.QTrue) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "manual locking disallowed with autolock enabled");
+            else if (BitmapDictionary[self].Locked) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "bitmap already locked");
+            BitmapDictionary[self].Lock();
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr get_pixel(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(2, Args);
-            int x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            int y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-            ODL.Color c = Bitmap.Bitmaps[_self].BitmapObject.GetPixel(x, y);
-            return Color.New(c.Red, c.Green, c.Blue, c.Alpha).Pointer;
+            int X = (int) Internal.NUM2LONG(Args[0].Pointer),
+                Y = (int) Internal.NUM2LONG(Args[1].Pointer);
+            return Color.CreateColor(BitmapDictionary[self].GetPixel(X, Y));
         }
 
-        static IntPtr set_pixel(IntPtr _self, IntPtr _args)
+        protected static IntPtr set_pixel(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(3, Args);
-            int x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            int y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-            Color c = Color.Colors[Args[2].Pointer];
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Unlock();
-            Bitmap.Bitmaps[_self].BitmapObject.SetPixel(x, y, c.Red, c.Green, c.Blue, c.Alpha);
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Lock();
-            return _self;
+            int X = (int) Internal.NUM2LONG(Args[0].Pointer),
+                Y = (int) Internal.NUM2LONG(Args[1].Pointer);
+            AutoUnlock(self);
+            BitmapDictionary[self].SetPixel(X, Y, Color.CreateColor(Args[2].Pointer));
+            AutoLock(self);
+            return Args[2].Pointer;
         }
 
-        static IntPtr fill_rect(IntPtr _self, IntPtr _args)
+        protected static IntPtr draw_line(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
-            int x = 0,
-                y = 0,
-                w = 0,
-                h = 0;
-            Color c = null;
-            if (Args.Length == 2)
-            {
-                Rect r = Rect.Rects[Args[0].Pointer];
-                x = r.X;
-                y = r.Y;
-                w = r.Width;
-                h = r.Height;
-                c = Color.Colors[Args[1].Pointer];
-            }
-            else if (Args.Length == 5)
-            {
-                x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-                y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-                w = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0));
-                h = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0));
-                c = Color.Colors[Args[4].Pointer];
-            }
-            else
-            {
-                ScanArgs(5, Args);
-            }
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Unlock();
-            Bitmap.Bitmaps[_self].BitmapObject.FillRect(x, y, w, h, c.Red, c.Green, c.Blue, c.Alpha);
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Lock();
-            return _self;
+            ScanArgs(5, Args);
+            int x1 = (int) Internal.NUM2LONG(Args[0].Pointer),
+                y1 = (int) Internal.NUM2LONG(Args[1].Pointer),
+                x2 = (int) Internal.NUM2LONG(Args[2].Pointer),
+                y2 = (int) Internal.NUM2LONG(Args[3].Pointer);
+            AutoUnlock(self);
+            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            BitmapDictionary[self].DrawLine(x1, y1, x2, y2, c);
+            AutoLock(self);
+            return Internal.QTrue;
         }
 
-        static IntPtr draw_text(IntPtr _self, IntPtr _args)
+        protected static IntPtr draw_rect(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
-            int x = 0,
-                y = 0,
-                w = 0,
-                h = 0;
-            string txt = null;
-            int align = 0;
-            if (Args.Length == 2 || Args.Length == 3)
-            {
-                Rect r = Rect.Rects[Args[0].Pointer];
-                x = r.X;
-                y = r.Y;
-                w = r.Width;
-                h = r.Height;
-                txt = new RubyString(Args[1].Pointer).ToString();
-                if (Args.Length == 3) align = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0));
-            }
-            else if (Args.Length == 5 || Args.Length == 6)
-            {
-                x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-                y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-                w = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0));
-                h = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0));
-                txt = new RubyString(Args[4].Pointer).ToString();
-                if (Args.Length == 6) align = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[5].Pointer, Internal.rb_intern("to_i"), 0));
-            }
-            else
-            {
-                ScanArgs(5, Args);
-            }
-
-            ODL.DrawOptions Options = ODL.DrawOptions.LeftAlign;
-            if (align == 1) Options = ODL.DrawOptions.CenterAlign;
-            else if (align == 2) Options = ODL.DrawOptions.RightAlign;
-            if (Bitmap.Bitmaps[_self].Font.Bold) Options |= ODL.DrawOptions.Bold;
-            if (Bitmap.Bitmaps[_self].Font.Italic) Options |= ODL.DrawOptions.Italic;
-
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Unlock();
-            Bitmap.Bitmaps[_self].BitmapObject.DrawText(txt, x, y, w, h, Bitmap.Bitmaps[_self].Font.Color.ColorObject, Options);
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Lock();
-
-            return _self;
+            ScanArgs(5, Args);
+            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
+                y = (int) Internal.NUM2LONG(Args[1].Pointer),
+                w = (int) Internal.NUM2LONG(Args[2].Pointer),
+                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            AutoUnlock(self);
+            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            BitmapDictionary[self].DrawRect(x, y, w, h, c);
+            AutoLock(self);
+            return Internal.QTrue;
         }
 
-        static IntPtr text_size(IntPtr _self, IntPtr _args)
+        protected static IntPtr fill_rect(IntPtr self, IntPtr _args)
         {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(5, Args);
+            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
+                y = (int) Internal.NUM2LONG(Args[1].Pointer),
+                w = (int) Internal.NUM2LONG(Args[2].Pointer),
+                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            AutoUnlock(self);
+            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            BitmapDictionary[self].FillRect(x, y, w, h, c);
+            AutoLock(self);
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr blt(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(4, Args);
+            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
+                y = (int) Internal.NUM2LONG(Args[1].Pointer);
+            AutoUnlock(self);
+            ODL.Bitmap srcbmp = BitmapDictionary[Args[2].Pointer];
+            ODL.Rect srcrect = Rect.CreateRect(Args[3].Pointer);
+            BitmapDictionary[self].Build(x, y, srcbmp, srcrect);
+            AutoLock(self);
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr text_size(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-
-            ODL.DrawOptions Options = 0;
-            if (Bitmap.Bitmaps[_self].Font.Bold) Options |= ODL.DrawOptions.Bold;
-            if (Bitmap.Bitmaps[_self].Font.Italic) Options |= ODL.DrawOptions.Italic;
-            ODL.Size s = Bitmap.Bitmaps[_self].BitmapObject.TextSize(new RubyString(Args[0].Pointer).ToString(), Options);
-            return Rect.New(0, 0, s.Width, s.Height).Pointer;
+            if (Args[0].Pointer == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "nil in text_size");
+            string text = new RubyString(Args[0].Pointer).ToString();
+            BitmapDictionary[self].Font = Font.CreateFont(Internal.GetIVar(self, "@font"));
+            return Rect.CreateRect(BitmapDictionary[self].TextSize(text));
         }
 
-        static IntPtr clear(IntPtr _self, IntPtr _args)
+        protected static IntPtr draw_text(IntPtr self, IntPtr _args)
         {
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Unlock();
-            Bitmap.Bitmaps[_self].BitmapObject.Clear();
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Lock();
-            return _self;
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            if (Args.Length != 5 && Args.Length != 6) ScanArgs(6, Args);
+            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
+                y = (int) Internal.NUM2LONG(Args[1].Pointer),
+                w = (int) Internal.NUM2LONG(Args[2].Pointer),
+                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            string text = new RubyString(Args[4].Pointer).ToString();
+            int align = 0;
+            if (Args.Length == 6) align = (int) Internal.NUM2LONG(Args[5].Pointer);
+            AutoUnlock(self);
+            BitmapDictionary[self].Font = Font.CreateFont(Internal.GetIVar(self, "@font"));
+            ODL.Color color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@color"));
+            ODL.DrawOptions options = 0;
+            bool outline = false;
+            if (align == 0) options |= ODL.DrawOptions.LeftAlign;
+            else if (align == 1) options |= ODL.DrawOptions.CenterAlign;
+            else if (align == 2) options |= ODL.DrawOptions.RightAlign;
+            if (Internal.GetIVar(Internal.GetIVar(self, "@font"), "@outline") == Internal.QTrue) outline = true;
+            if (outline)
+            {
+                ODL.Color outline_color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@outline_color"));
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y + 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y + 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y + 1, w, h), outline_color, options);
+            }
+            BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y, w, h), color, options);
+            SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[self].Texture, SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            AutoLock(self);
+            return Internal.QTrue;
         }
 
-        static IntPtr dispose(IntPtr _self, IntPtr _args)
+        protected static IntPtr clear(IntPtr self, IntPtr _args)
         {
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Unlock();
-            Bitmap.Bitmaps[_self].BitmapObject.Dispose();
-            if (Config.AutoLock) Bitmap.Bitmaps[_self].BitmapObject.Lock();
-            return _self;
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            AutoUnlock(self);
+            BitmapDictionary[self].Clear();
+            AutoLock(self);
+            return Internal.QTrue;
         }
 
-        static IntPtr disposed(IntPtr _self, IntPtr _args)
+        protected static IntPtr dispose(IntPtr self, IntPtr _args)
         {
-            return Bitmap.Bitmaps[_self].BitmapObject.Disposed ? Internal.QTrue : Internal.QFalse;
+            GuardDisposed(self);
+            if (_args != IntPtr.Zero)
+            {
+                RubyArray Args = new RubyArray(_args);
+                ScanArgs(0, Args);
+            }
+            BitmapDictionary[self].Dispose();
+            BitmapDictionary.Remove(self);
+            Internal.SetIVar(self, "@disposed", Internal.QTrue);
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr disposed(IntPtr self, IntPtr _args)
+        {
+            if (_args != IntPtr.Zero)
+            {
+                RubyArray Args = new RubyArray(_args);
+                ScanArgs(0, Args);
+            }
+            return Internal.GetIVar(self, "@disposed") == Internal.QTrue ? Internal.QTrue : Internal.QFalse;
+        }
+
+        protected static void GuardDisposed(IntPtr self)
+        {
+            if (disposed(self, IntPtr.Zero) == Internal.QTrue)
+            {
+                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "bitmap already disposed");
+            }
         }
     }
 }

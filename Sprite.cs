@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Sprite : RubyObject
     {
-        public ODL.Sprite SpriteObject;
-        public static IntPtr ClassPointer;
-        public static Dictionary<IntPtr, Sprite> Sprites = new Dictionary<IntPtr, Sprite>();
+        public static IntPtr Class;
+        public static Dictionary<IntPtr, ODL.Sprite> SpriteDictionary = new Dictionary<IntPtr, ODL.Sprite>();
 
         public static Class CreateClass()
         {
             Class c = new Class("Sprite");
-            ClassPointer = c.Pointer;
-            c.DefineClassMethod("new", New);
+            Class = c.Pointer;
+            c.DefineClassMethod("new", _new);
             c.DefineMethod("initialize", initialize);
             c.DefineMethod("viewport", viewportget);
             c.DefineMethod("viewport=", viewportset);
             c.DefineMethod("bitmap", bitmapget);
             c.DefineMethod("bitmap=", bitmapset);
-            c.DefineMethod("src_rect", src_rectget);
-            c.DefineMethod("src_rect=", src_rectset);
             c.DefineMethod("x", xget);
             c.DefineMethod("x=", xset);
             c.DefineMethod("y", yget);
@@ -40,512 +38,381 @@ namespace odlgss
             c.DefineMethod("opacity=", opacityset);
             c.DefineMethod("angle", angleget);
             c.DefineMethod("angle=", angleset);
-            c.DefineMethod("mirror", mirrorget);
-            c.DefineMethod("mirror=", mirrorset);
-            c.DefineMethod("color", colorget);
-            c.DefineMethod("color=", colorset);
-            c.DefineMethod("tone", toneget);
-            c.DefineMethod("tone=", toneset);
+            c.DefineMethod("src_rect", src_rectget);
+            c.DefineMethod("src_rect=", src_rectset);
             c.DefineMethod("visible", visibleget);
             c.DefineMethod("visible=", visibleset);
+            c.DefineMethod("mirror_x", mirror_xget);
+            c.DefineMethod("mirror_x=", mirror_xset);
+            c.DefineMethod("mirror_y", mirror_yget);
+            c.DefineMethod("mirror_y=", mirror_yset);
             c.DefineMethod("update", update);
             c.DefineMethod("dispose", dispose);
             c.DefineMethod("disposed?", disposed);
             return c;
         }
 
-        private Sprite()
+        protected static IntPtr allocate(IntPtr Class)
         {
-            this.Pointer = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("allocate"), 0);
-            Sprites[Pointer] = this;
+            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
         }
 
-        public static Sprite New(Viewport Viewport)
-        {
-            IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 1, Viewport.Pointer);
-            return Sprites[ptr];
-        }
-        public void Initialize(Viewport Viewport)
-        {
-            SpriteObject = new ODL.Sprite(Viewport.ViewportObject);
-            this.Viewport = Viewport;
-            this.X = 0;
-            this.Y = 0;
-            this.Z = 0;
-            this.OX = 0;
-            this.OY = 0;
-            this.ZoomX = 1.0;
-            this.ZoomY = 1.0;
-            this.Opacity = 255;
-            this.Angle = 0;
-            this.Mirror = false;
-            this.Color = Color.New(255, 255, 255);
-            this.Tone = Tone.New(0, 0, 0, 0);
-            this.Visible = true;
-        }
-
-        public static Sprite New()
-        {
-            return Sprite.New(Graphics.MainViewport);
-        }
-        public void Initialize()
-        {
-            this.Initialize(Graphics.MainViewport);
-        }
-
-        public Viewport Viewport
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("viewport"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Viewport.Viewports[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("viewport="), 1, value == null ? Internal.QNil : value.Pointer);
-            }
-        }
-        public Bitmap Bitmap
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("bitmap"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Bitmap.Bitmaps[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("bitmap="), 1, value == null ? Internal.QNil : value.Pointer);
-            }
-        }
-        public Rect SrcRect
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("src_rect"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Rect.Rects[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("src_rect="), 1, value.Pointer);
-            }
-        }
-        public int X
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("x"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("x="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Y
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("y"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("y="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Z
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("z"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("z="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int OX
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("ox"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("ox="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int OY
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("oy"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("oy="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public double ZoomX
-        {
-            get
-            {
-                return Internal.rb_num2dbl(Internal.rb_funcallv(Pointer, Internal.rb_intern("zoom_x"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("zoom_x="), 1, Internal.rb_float_new(value));
-            }
-        }
-        public double ZoomY
-        {
-            get
-            {
-                return Internal.rb_num2dbl(Internal.rb_funcallv(Pointer, Internal.rb_intern("zoom_y"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("zoom_y="), 1, Internal.rb_float_new(value));
-            }
-        }
-        public byte Opacity
-        {
-            get
-            {
-                return (byte) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("opacity"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("opacity="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Angle
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("angle"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("angle="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public bool Mirror
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("mirror"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("mirror="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public Color Color
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("color"), 0);
-                return Color.Colors[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("color="), 1, value.Pointer);
-            }
-        }
-        public Tone Tone
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("tone"), 0);
-                return Tone.Tones[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("tone="), 1, value.Pointer);
-            }
-        }
-        public bool Visible
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("visible"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("visible="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public void Update()
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("update"), 0);
-        }
-        public void Dispose()
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("dispose"), 0);
-        }
-        public bool Disposed
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("disposed?"), 0) == Internal.QTrue;
-            }
-        }
-
-        static IntPtr New(IntPtr _self, IntPtr _args)
-        {
-            Sprite s = new Sprite();
-            RubyArray Args = new RubyArray(_args);
-            IntPtr[] newargs = new IntPtr[Args.Length];
-            for (int i = 0; i < Args.Length; i++) newargs[i] = Args[i].Pointer;
-            Internal.rb_funcallv(s.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
-            return s.Pointer;
-        }
-        static IntPtr initialize(IntPtr _self, IntPtr _args)
+        protected static IntPtr _new(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
+            IntPtr obj = allocate(self);
+            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
+            return obj;
+        }
 
-            Sprite s = Sprites[_self];
-            if (Args.Length == 0) // Main viewport
-            {
-                s.Initialize();
-            }
+        protected static IntPtr initialize(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            IntPtr viewport = IntPtr.Zero;
+            if (Args.Length == 0 || Args.Length == 1 && Args[0].Pointer == Internal.QNil)
+                viewport = Internal.GetGlobalVariable("$__mainvp__");
             else if (Args.Length == 1)
+                viewport = Args[0].Pointer;
+            else ScanArgs(1, Args);
+            Internal.SetIVar(self, "@viewport", viewport);
+            Internal.SetIVar(self, "@x", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@y", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@z", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@opacity", Internal.LONG2NUM(255));
+            Internal.SetIVar(self, "@angle", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@zoom_x", Internal.rb_float_new(1d));
+            Internal.SetIVar(self, "@zoom_y", Internal.rb_float_new(1d));
+            IntPtr src_rect = Rect.CreateRect(new ODL.Rect(0, 0, 0, 0));
+            Internal.SetIVar(self, "@src_rect", src_rect);
+            Internal.SetIVar(src_rect, "@__sprite__", self);
+            Internal.SetIVar(self, "@visible", Internal.QTrue);
+            Internal.SetIVar(self, "@mirror_x", Internal.QFalse);
+            Internal.SetIVar(self, "@mirror_y", Internal.QFalse);
+
+            if (!Viewport.ViewportDictionary.ContainsKey(viewport)) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "invalid viewport");
+            ODL.Sprite sprite = new ODL.Sprite(Viewport.ViewportDictionary[viewport]);
+            if (SpriteDictionary.ContainsKey(self)) dispose(self, IntPtr.Zero);
+            SpriteDictionary.Add(self, sprite);
+            return self;
+        }
+
+        protected static IntPtr viewportget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@viewport");
+        }
+
+        protected static IntPtr viewportset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            return Internal.SetIVar(self, "@viewport", Args[0].Pointer);
+        }
+
+        protected static IntPtr bitmapget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@bitmap");
+        }
+
+        protected static IntPtr bitmapset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            if (Args[0].Pointer == Internal.QNil) SpriteDictionary[self].Bitmap = null;
+            else SpriteDictionary[self].Bitmap = Bitmap.BitmapDictionary[Args[0].Pointer];
+            int x = 0,
+                y = 0,
+                w = SpriteDictionary[self].Bitmap == null ? 0 : SpriteDictionary[self].Bitmap.Width,
+                h = SpriteDictionary[self].Bitmap == null ? 0 : SpriteDictionary[self].Bitmap.Height;
+            SpriteDictionary[self].SrcRect.X = 0;
+            SpriteDictionary[self].SrcRect.Y = 0;
+            SpriteDictionary[self].SrcRect.Width = w;
+            SpriteDictionary[self].SrcRect.Height = h;
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@x", Internal.LONG2NUM(x));
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@y", Internal.LONG2NUM(y));
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@width", Internal.LONG2NUM(w));
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@height", Internal.LONG2NUM(h));
+            return Internal.SetIVar(self, "@bitmap", Args[0].Pointer);
+        }
+
+        protected static IntPtr xget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@x");
+        }
+
+        protected static IntPtr xset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@x", Args[0].Pointer);
+        }
+
+        protected static IntPtr yget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@y");
+        }
+
+        protected static IntPtr yset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@y", Args[0].Pointer);
+        }
+
+        protected static IntPtr zget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@z");
+        }
+
+        protected static IntPtr zset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@z", Args[0].Pointer);
+        }
+
+        protected static IntPtr oxget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@ox");
+        }
+
+        protected static IntPtr oxset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@ox", Args[0].Pointer);
+        }
+
+        protected static IntPtr oyget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@oy");
+        }
+
+        protected static IntPtr oyset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].OY = (int)Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@oy", Args[0].Pointer);
+        }
+
+        protected static IntPtr zoom_xget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@zoom_x");
+        }
+
+        protected static IntPtr zoom_xset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].ZoomX = Internal.rb_num2dbl(Args[0].Pointer);
+            return Internal.SetIVar(self, "@zoom_x", Args[0].Pointer);
+        }
+
+        protected static IntPtr zoom_yget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@zoom_y");
+        }
+
+        protected static IntPtr zoom_yset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].ZoomY = Internal.rb_num2dbl(Args[0].Pointer);
+            return Internal.SetIVar(self, "@zoom_y", Args[0].Pointer);
+        }
+
+        protected static IntPtr opacityget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@opacity");
+        }
+
+        protected static IntPtr opacityset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].Opacity = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@opacity", Args[0].Pointer);
+        }
+
+        protected static IntPtr angleget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@angle");
+        }
+
+        protected static IntPtr angleset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            int integer = (int) Internal.NUM2LONG(Args[0].Pointer) % 360;
+            IntPtr value = Internal.LONG2NUM(integer);
+            SpriteDictionary[self].Angle = integer;
+            return Internal.SetIVar(self, "@angle", value);
+        }
+
+        protected static IntPtr src_rectget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@src_rect");
+        }
+
+        protected static IntPtr src_rectset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@__sprite__", Internal.QNil);
+            SpriteDictionary[self].SrcRect = Rect.CreateRect(Args[0].Pointer);
+            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
+            return Internal.SetIVar(self, "@src_rect", Args[0].Pointer);
+        }
+
+        protected static IntPtr visibleget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@visible");
+        }
+
+        protected static IntPtr visibleset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].Visible = Args[0].Pointer == Internal.QTrue;
+            return Internal.SetIVar(self, "@visible", Args[0].Pointer);
+        }
+
+        protected static IntPtr mirror_xget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@mirror_x");
+        }
+
+        protected static IntPtr mirror_xset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].MirrorX = Args[0].Pointer == Internal.QTrue;
+            return Internal.SetIVar(self, "@mirror_x", Args[0].Pointer);
+        }
+
+        protected static IntPtr mirror_yget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@mirror_y");
+        }
+
+        protected static IntPtr mirror_yset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            SpriteDictionary[self].MirrorY = Args[0].Pointer == Internal.QTrue;
+            return Internal.SetIVar(self, "@mirror_y", Args[0].Pointer);
+        }
+
+        protected static IntPtr update(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.QNil;
+        }
+
+        protected static IntPtr dispose(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            if (_args != IntPtr.Zero)
             {
-                s.Initialize(Viewport.Viewports[Args[0].Pointer]);
+                RubyArray Args = new RubyArray(_args);
+                ScanArgs(0, Args);
             }
-            else
+            SpriteDictionary[self].Dispose();
+            foreach (KeyValuePair<IntPtr, ODL.Bitmap> kvp in Bitmap.BitmapDictionary)
             {
-                ScanArgs(1, Args);
+                if (kvp.Value == SpriteDictionary[self].Bitmap)
+                {
+                    Bitmap.BitmapDictionary.Remove(kvp.Key);
+                    break;
+                }
             }
-
-            return s.Pointer;
+            SpriteDictionary.Remove(self);
+            Internal.SetIVar(self, "@disposed", Internal.QTrue);
+            return Internal.QTrue;
         }
 
-        static IntPtr viewportget(IntPtr _self, IntPtr _args)
+        protected static IntPtr disposed(IntPtr self, IntPtr _args)
         {
-            IntPtr ptr = Internal.rb_ivar_get(_self, Internal.rb_intern("@viewport"));
-            if (ptr == Graphics.MainViewport.Pointer) return Internal.QNil;
-            return ptr;
-        }
-        static IntPtr viewportset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            IntPtr vp = Args[0].Pointer;
-            if (vp == Internal.QNil)
-                vp = Graphics.MainViewport.Pointer;
-            IntPtr Value = Internal.rb_ivar_set(_self, Internal.rb_intern("@viewport"), vp);
-            return Value;
-        }
-
-        static IntPtr bitmapget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@bitmap"));
-        }
-        static IntPtr bitmapset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            IntPtr Value = Internal.rb_ivar_set(_self, Internal.rb_intern("@bitmap"), Args[0].Pointer);
-            if (Args[0].Pointer != Internal.QNil)
+            if (_args != IntPtr.Zero)
             {
-                Sprite.Sprites[_self].SpriteObject.Bitmap = Bitmap.Bitmaps[Args[0].Pointer].BitmapObject;
-                Sprite.Sprites[_self].SrcRect = Rect.New(0, 0, Bitmap.Bitmaps[Args[0].Pointer].Width, Bitmap.Bitmaps[Args[0].Pointer].Height);
+                RubyArray Args = new RubyArray(_args);
+                ScanArgs(0, Args);
             }
-            return Value;
+            return Internal.GetIVar(self, "@disposed") == Internal.QTrue ? Internal.QTrue : Internal.QFalse;
         }
 
-        static IntPtr src_rectget(IntPtr _self, IntPtr _args)
+        protected static void GuardDisposed(IntPtr self)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@src_rect"));
-        }
-        static IntPtr src_rectset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            IntPtr Value = Internal.rb_ivar_set(_self, Internal.rb_intern("@src_rect"), Args[0].Pointer);
-            Sprite.Sprites[_self].SpriteObject.SrcRect = Rect.Rects[Args[0].Pointer].RectObject;
-            return Value;
-        }
-
-        static IntPtr xget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@x"));
-        }
-        static IntPtr xset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.X = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@x"), Args[0].Pointer);
-        }
-
-        static IntPtr yget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@y"));
-        }
-        static IntPtr yset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@y"), Args[0].Pointer);
-        }
-
-        static IntPtr zget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@z"));
-        }
-        static IntPtr zset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Z = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@z"), Args[0].Pointer);
-        }
-
-        static IntPtr oxget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@ox"));
-        }
-        static IntPtr oxset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.OX = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@ox"), Args[0].Pointer);
-        }
-
-        static IntPtr oyget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@oy"));
-        }
-        static IntPtr oyset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.OY = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@oy"), Args[0].Pointer);
-        }
-
-        static IntPtr zoom_xget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@zoom_x"));
-        }
-        static IntPtr zoom_xset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.ZoomX = Internal.rb_num2dbl(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_f"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@zoom_x"), Args[0].Pointer);
-        }
-
-        static IntPtr zoom_yget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@zoom_y"));
-        }
-        static IntPtr zoom_yset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.ZoomY = Internal.rb_num2dbl(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_f"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@zoom_y"), Args[0].Pointer);
-        }
-
-        static IntPtr opacityget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@opacity"));
-        }
-        static IntPtr opacityset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Opacity = (byte) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@opacity"), Args[0].Pointer);
-        }
-
-        static IntPtr angleget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@angle"));
-        }
-        static IntPtr angleset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Angle = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@angle"), Args[0].Pointer);
-        }
-
-        static IntPtr mirrorget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@mirror"));
-        }
-        static IntPtr mirrorset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.MirrorX = Args[0].Pointer == Internal.QTrue;
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@mirror"), Args[0].Pointer);
-        }
-
-        static IntPtr colorget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@color"));
-        }
-        static IntPtr colorset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Color = Color.Colors[Args[0].Pointer].ColorObject;
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@color"), Args[0].Pointer);
-        }
-
-        static IntPtr toneget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@tone"));
-        }
-        static IntPtr toneset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Tone = Tone.Tones[Args[0].Pointer].ToneObject;
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@tone"), Args[0].Pointer);
-        }
-
-        static IntPtr visibleget(IntPtr _self, IntPtr _args)
-        {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@visible"));
-        }
-        static IntPtr visibleset(IntPtr _self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Sprite.Sprites[_self].SpriteObject.Visible = Args[0].Pointer == Internal.QTrue;
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@visible"), Args[0].Pointer);
-        }
-
-        static IntPtr update(IntPtr _self, IntPtr _args)
-        {
-            return _self;
-        }
-
-        static IntPtr dispose(IntPtr _self, IntPtr _args)
-        {
-            ODL.Bitmap bmp = null;
-            if (Sprite.Sprites[_self].SpriteObject.Bitmap != null)
-                bmp = Sprite.Sprites[_self].SpriteObject.Bitmap;
-            Sprite.Sprites[_self].SpriteObject.Bitmap = null;
-            // Bitmap should only be separated from the sprite; not disposed
-            Sprite.Sprites[_self].SpriteObject.Dispose();
-            Sprite.Sprites[_self].SpriteObject.Bitmap = bmp;
-            return _self;
-        }
-
-        static IntPtr disposed(IntPtr _self, IntPtr _args)
-        {
-            return Sprite.Sprites[_self].SpriteObject.Disposed ? Internal.QTrue : Internal.QFalse;
+            if (disposed(self, IntPtr.Zero) == Internal.QTrue)
+            {
+                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "sprite already disposed");
+            }
         }
     }
 }

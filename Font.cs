@@ -1,373 +1,266 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Font : RubyObject
     {
-        public ODL.Font FontObject;
-        public static IntPtr ClassPointer;
-        public static Dictionary<IntPtr, Font> Fonts = new Dictionary<IntPtr, Font>();
-
-        public static string DefaultName
-        {
-            get
-            {
-                return new RubyString(Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_name"), 0)).ToString();
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_name="), 1, Internal.rb_str_new_cstr(value));
-            }
-        }
-        public static int DefaultSize
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_size"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_size="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public static bool DefaultBold
-        {
-            get
-            {
-                return Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_bold"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_bold="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public static bool DefaultItalic
-        {
-            get
-            {
-                return Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_italic"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_italic="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public static bool DefaultOutline
-        {
-            get
-            {
-                return Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_outline"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_outline="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public static Color DefaultColor
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_color"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Color.Colors[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(ClassPointer, Internal.rb_intern("default_color="), 1, value.Pointer);
-            }
-        }
+        public static IntPtr Class;
 
         public static Class CreateClass()
         {
             Class c = new Class("Font");
-            ClassPointer = c.Pointer;
-            c.DefineClassMethod("new", New);
-            c.DefineMethod("initialize", initialize);
+            Class = c.Pointer;
+            c.DefineClassMethod("default_folder", default_folderget);
+            c.DefineClassMethod("default_folder=", default_folderset);
             c.DefineClassMethod("default_name", default_nameget);
             c.DefineClassMethod("default_name=", default_nameset);
             c.DefineClassMethod("default_size", default_sizeget);
             c.DefineClassMethod("default_size=", default_sizeset);
-            c.DefineClassMethod("default_bold", default_boldget);
-            c.DefineClassMethod("default_bold=", default_boldset);
-            c.DefineClassMethod("default_italic", default_italicget);
-            c.DefineClassMethod("default_italic=", default_italicset);
-            c.DefineClassMethod("default_outline", default_outlineget);
-            c.DefineClassMethod("default_outline=", default_outlineset);
             c.DefineClassMethod("default_color", default_colorget);
             c.DefineClassMethod("default_color=", default_colorset);
+            c.DefineClassMethod("default_outline", default_outlineget);
+            c.DefineClassMethod("default_outline=", default_outlineset);
+            c.DefineClassMethod("default_outline_color", default_outline_colorget);
+            c.DefineClassMethod("default_outline_color=", default_outline_colorset);
+            c.DefineClassMethod("new", _new);
+            c.DefineMethod("initialize", initialize);
             c.DefineMethod("name", nameget);
             c.DefineMethod("name=", nameset);
             c.DefineMethod("size", sizeget);
             c.DefineMethod("size=", sizeset);
-            c.DefineMethod("bold", boldget);
-            c.DefineMethod("bold=", boldset);
-            c.DefineMethod("italic", italicget);
-            c.DefineMethod("italic=", italicset);
             c.DefineMethod("color", colorget);
             c.DefineMethod("color=", colorset);
+            c.DefineMethod("outline", outlineget);
+            c.DefineMethod("outline=", outlineset);
+            c.DefineMethod("outline_color", outline_colorget);
+            c.DefineMethod("outline_color=", outline_colorset);
             return c;
         }
 
-        static IntPtr default_nameget(IntPtr _self, IntPtr _args)
+        public static IntPtr CreateFont()
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_name"));
+            if (Internal.GetIVar(Class, "@default_name") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font name defined");
+            if (Internal.GetIVar(Class, "@default_size") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font size defined");
+            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 2, new IntPtr[2]
+            {
+                Internal.GetIVar(Class, "@default_name"),
+                Internal.GetIVar(Class, "@default_size")
+            });
         }
-        static IntPtr default_nameset(IntPtr _self, IntPtr _args)
+
+        public static ODL.Font CreateFont(IntPtr self)
+        {
+            string folder = null;
+            if (Internal.GetIVar(Class, "@default_folder") != Internal.QNil) folder = new RubyString(Internal.GetIVar(Class, "@default_folder")).ToString();
+            string name = new RubyString(Internal.GetIVar(self, "@name")).ToString();
+            int size = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@size"));
+            if (!string.IsNullOrEmpty(folder) && ODL.Font.Exists(folder + "/" + name))
+                return ODL.Font.Get(folder + "/" + name, size);
+            else return ODL.Font.Get(name, size);
+        }
+
+        public static IntPtr default_folderget(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_folder");
+        }
+
+        public static IntPtr default_folderset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_name"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_folder", Args[0].Pointer);
         }
 
-        static IntPtr default_sizeget(IntPtr _self, IntPtr _args)
+        public static IntPtr default_nameget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_size"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_name");
         }
-        static IntPtr default_sizeset(IntPtr _self, IntPtr _args)
+
+        public static IntPtr default_nameset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_size"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_name", Args[0].Pointer);
         }
 
-        static IntPtr default_boldget(IntPtr _self, IntPtr _args)
+        public static IntPtr default_sizeget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_bold"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_size");
         }
-        static IntPtr default_boldset(IntPtr _self, IntPtr _args)
+
+        public static IntPtr default_sizeset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_bold"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_size", Args[0].Pointer);
         }
 
-        static IntPtr default_italicget(IntPtr _self, IntPtr _args)
+        public static IntPtr default_colorget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_italic"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_color");
         }
-        static IntPtr default_italicset(IntPtr _self, IntPtr _args)
+
+        public static IntPtr default_colorset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_italic"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_color", Args[0].Pointer);
         }
 
-        static IntPtr default_outlineget(IntPtr _self, IntPtr _args)
+        public static IntPtr default_outlineget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_outline"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_outline");
         }
-        static IntPtr default_outlineset(IntPtr _self, IntPtr _args)
+
+        public static IntPtr default_outlineset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_outline"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_outline", Args[0].Pointer);
         }
 
-        static IntPtr default_colorget(IntPtr _self, IntPtr _args)
+        public static IntPtr default_outline_colorget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@default_color"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(Class, "@default_outline_color");
         }
-        static IntPtr default_colorset(IntPtr _self, IntPtr _args)
+
+        public static IntPtr default_outline_colorset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@default_color"), Args[0].Pointer);
+            return Internal.SetIVar(Class, "@default_outline_color", Args[0].Pointer);
         }
 
-        private Font()
+        protected static IntPtr allocate(IntPtr Class)
         {
-            this.Pointer = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("allocate"), 0);
-            Fonts[Pointer] = this;
+            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
         }
 
-        public static Font New(string Name, int Size)
-        {
-            IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 2,
-                Internal.rb_str_new_cstr(Name),
-                Internal.LONG2NUM(Size)
-            );
-            return Fonts[ptr];
-        }
-        public void Initialize(string Name, int Size)
-        {
-            FontObject = new ODL.Font(Name, Size);
-            this.Name = Name;
-            this.Size = Size;
-            this.Bold = Font.DefaultBold;
-            this.Italic = Font.DefaultItalic;
-            this.Color = Font.DefaultColor;
-        }
-
-        public static Font New(string Name)
-        {
-            return Font.New(Name, DefaultSize);
-        }
-        public void Initialize(string Name)
-        {
-            this.Initialize(Name, DefaultSize);
-        }
-
-        public static Font New()
-        {
-            return Font.New(DefaultName, DefaultSize);
-        }
-        public void Initialize()
-        {
-            this.Initialize(DefaultName, DefaultSize);
-        }
-
-        public string Name
-        {
-            get
-            {
-                return new RubyString(Internal.rb_funcallv(Pointer, Internal.rb_intern("name"), 0)).ToString();
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("name="), 1, Internal.rb_str_new_cstr(value));
-            }
-        }
-        public int Size
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("size"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("size="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public bool Bold
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("bold"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("bold="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public bool Italic
-        {
-            get
-            {
-                return Internal.rb_funcallv(Pointer, Internal.rb_intern("italic"), 0) == Internal.QTrue;
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("italic="), 1, value ? Internal.QTrue : Internal.QFalse);
-            }
-        }
-        public Color Color
-        {
-            get
-            {
-                IntPtr ptr = Internal.rb_funcallv(Pointer, Internal.rb_intern("color"), 0);
-                if (ptr == Internal.QNil) return null;
-                return Color.Colors[ptr];
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("color="), 1, value.Pointer);
-            }
-        }
-
-        static IntPtr New(IntPtr _self, IntPtr _args)
-        {
-            Font f = new Font();
-            RubyArray Args = new RubyArray(_args);
-            IntPtr[] newargs = new IntPtr[Args.Length];
-            for (int i = 0; i < Args.Length; i++) newargs[i] = Args[i].Pointer;
-            Internal.rb_funcallv(f.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
-            return f.Pointer;
-        }
-        static IntPtr initialize(IntPtr _self, IntPtr _args)
+        protected static IntPtr _new(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
+            IntPtr obj = allocate(self);
+            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
+            return obj;
+        }
 
-            Font f = Fonts[_self];
+        protected static IntPtr initialize(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            IntPtr Name = IntPtr.Zero,
+                   Size = IntPtr.Zero;
             if (Args.Length == 2)
             {
-                string Name = new RubyString(Args[0].Pointer).ToString();
-                int Size = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-                f.Initialize(Name, Size);
+                Name = Args[0].Pointer;
+                Size = Args[1].Pointer;
             }
             else if (Args.Length == 1)
             {
-                string Name = new RubyString(Args[0].Pointer).ToString();
-                int Size = Font.DefaultSize;
-                f.Initialize(Name, Size);
+                Name = Args[0].Pointer;
+                if (Internal.GetIVar(Class, "@default_size") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font size defined");
+                Size = Internal.GetIVar(Class, "@default_size");
             }
-            else
+            else if (Args.Length == 0)
             {
-                string Name = Font.DefaultName;
-                int Size = Font.DefaultSize;
-                f.Initialize(Name, Size);
+                if (Internal.GetIVar(Class, "@default_name") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font name defined");
+                if (Internal.GetIVar(Class, "@default_size") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font size defined");
+                Name = Internal.GetIVar(Class, "@default_name");
+                Size = Internal.GetIVar(Class, "@default_size");
             }
+            else ScanArgs(2, Args);
 
-            return _self;
+            Internal.SetIVar(self, "@name", Name);
+            Internal.SetIVar(self, "@size", Size);
+            Internal.SetIVar(self, "@color", Internal.GetIVar(Class, "@default_color"));
+            Internal.SetIVar(self, "@outline", Internal.GetIVar(Class, "@default_outline"));
+            Internal.SetIVar(self, "@outline_color", Internal.GetIVar(Class, "@default_outline_color"));
+
+            return self;
         }
 
-        static IntPtr nameget(IntPtr _self, IntPtr _args)
+        protected static IntPtr nameget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@name"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@name");
         }
-        static IntPtr nameset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr nameset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Font.Fonts[_self].FontObject.SetName(new RubyString(Args[0].Pointer).ToString());
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@name"), Args[0].Pointer);
+            return Internal.SetIVar(self, "@name", Args[0].Pointer);
         }
 
-        static IntPtr sizeget(IntPtr _self, IntPtr _args)
+        protected static IntPtr sizeget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@size"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@size");
         }
-        static IntPtr sizeset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr sizeset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Font.Fonts[_self].FontObject.SetSize((int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0)));
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@size"), Args[0].Pointer);
+            return Internal.SetIVar(self, "@size", Args[0].Pointer);
         }
 
-        static IntPtr boldget(IntPtr _self, IntPtr _args)
+        protected static IntPtr colorget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@bold"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@color");
         }
-        static IntPtr boldset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr colorset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@bold"), Args[0].Pointer);
+            return Internal.SetIVar(self, "@color", Args[0].Pointer);
         }
 
-        static IntPtr italicget(IntPtr _self, IntPtr _args)
+        protected static IntPtr outlineget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@italic"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@outline");
         }
-        static IntPtr italicset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr outlineset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@italic"), Args[0].Pointer);
+            return Internal.SetIVar(self, "@outline", Args[0].Pointer);
         }
 
-        static IntPtr colorget(IntPtr _self, IntPtr _args)
+        protected static IntPtr outline_colorget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@color"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@outline_color");
         }
-        static IntPtr colorset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr outline_colorset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            IntPtr Value = Internal.rb_ivar_set(_self, Internal.rb_intern("@color"), Args[0].Pointer);
-            return Value;
+            return Internal.SetIVar(self, "@outline_color", Args[0].Pointer);
         }
     }
 }

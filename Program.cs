@@ -1,45 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using ODL;
 using RubyDotNET;
-using static SDL2.SDL;
 
-namespace odlgss
+namespace Peridot
 {
     public class Program
     {
         public static Window MainWindow;
         public static bool Looping = true;
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Internal.Initialize();
 
             Graphics.CreateModule();
             Input.CreateModule();
             Audio.CreateModule();
-            Sprite.CreateClass();
-            Rect.CreateClass();
             Viewport.CreateClass();
+            Sprite.CreateClass();
             Bitmap.CreateClass();
             Color.CreateClass();
-            Tone.CreateClass();
+            Rect.CreateClass();
             Font.CreateClass();
+            //Tone.CreateClass();
 
-            int Width = 512;
-            int Height = 384;
-            Graphics.Width = Width;
-            Graphics.Height = Height;
-            ODL.Font.FontPath = "D:/Desktop/MK/mk/fonts";
-            Internal.rb_const_set(Internal.rb_cObject.Pointer, Internal.rb_intern("SCREENWIDTH"), Internal.LONG2NUM(Graphics.Width));
-            Internal.rb_const_set(Internal.rb_cObject.Pointer, Internal.rb_intern("SCREENHEIGHT"), Internal.LONG2NUM(Graphics.Height));
+            Config.LoadSettings(Assembly.GetExecutingAssembly().GetName().Name + ".json", "peridot.json", "config.json");
+
+            int Width = Config.WindowWidth;
+            int Height = Config.WindowHeight;
+            Internal.SetIVar(Graphics.Module, "@width", Internal.LONG2NUM(Width));
+            Internal.SetIVar(Graphics.Module, "@height", Internal.LONG2NUM(Height));
+            Internal.rb_define_global_const("SCREENWIDTH", Internal.LONG2NUM(Width));
+            Internal.rb_define_global_const("SCREENHEIGHT", Internal.LONG2NUM(Height));
+
+            Internal.rb_cObject.DefineMethod("p", p);
+            Internal.rb_cObject.DefineMethod("puts", puts);
 
             ODL.Graphics.Start();
+            if (string.IsNullOrEmpty(Config.Script)) throw new Exception($"No starting script found (use the 'script' key in the configuration file).");
 
             MainWindow = new Window();
+            if (!string.IsNullOrEmpty(Config.WindowIcon)) MainWindow.SetIcon(Config.WindowIcon);
+            MainWindow.SetText(Config.WindowTitle);
             MainWindow.SetResizable(false);
             MainWindow.SetSize(Width, Height);
+            MainWindow.SetBackgroundColor(Config.BackgroundColor);
             MainWindow.Show();
-            MainWindow.OnClosed += delegate (object sender, ClosedEventArgs e)
+            ODL.Graphics.Update(); // Ensure the renderer updates to show the black background color while loading the game
+            MainWindow.OnClosed += delegate (BaseEventArgs e)
             {
                 ODL.Graphics.Stop();
             };
@@ -50,31 +62,21 @@ namespace odlgss
             PrepareLoadPath();
 
             // Runs the script and returns raises a RuntimeError when window is closed.
-            LoadScript("D:/Desktop/MK/mk/ruby/scripts/requires.rb");
+            LoadScript(Config.Script);
 
-            //MainFunc();
-
-            if (!MainWindow.Closed) MainWindow.Close();
+            if (!MainWindow.IsClosed) MainWindow.Close();
         }
 
         public static void PrepareLoadPath()
         {
-            IntPtr var = Internal.rb_gv_get("$LOAD_PATH");
-            Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0"));
-            Internal.rb_ary_push(var, Internal.rb_str_new_cstr("D:\\Desktop\\MK\\mk\\ruby\\extensions\\2.6.0\\i386-mingw32"));
-            Internal.Eval("Dir.chdir 'D:/Desktop/MK/mk'");
-        }
-
-        public static void MainFunc()
-        {
-            while (ODL.Graphics.CanUpdate())
+            IntPtr load_path = Internal.rb_gv_get("$LOAD_PATH");
+            for (int i = 0; i < Config.RubyLoadPath.Count; i++)
             {
-                Input.Update();
-                Graphics.Update();
-                if (Input.Trigger((long) SDL_Keycode.SDLK_RETURN))
-                {
-                    
-                }
+                Internal.rb_ary_push(load_path, Internal.rb_str_new_cstr(Config.RubyLoadPath[i]));
+            }
+            if (!string.IsNullOrEmpty(Config.MainDirectory))
+            {
+                Internal.rb_funcallv(Internal.rb_cDir.Pointer, Internal.rb_intern("chdir"), 1, new IntPtr[1] { Internal.rb_str_new_cstr(Config.MainDirectory) });
             }
         }
 
@@ -93,9 +95,8 @@ namespace odlgss
                 Internal.rb_gv_set("$x", Err);
                 bool Handled = Internal.Eval("$x.is_a?(SystemExit)") == Internal.QTrue;
                 if (Handled) return;
-                Internal.Eval("p $x");
-                Internal.Eval(@"type = $x.class.to_s
-msg = type + ': ' + $x.to_s + ""\n""
+                IntPtr msg = Internal.Eval(@"type = $x.class.to_s
+msg = type + ': ' + $x.to_s + ""\n\n""
 for i in 0...$x.backtrace.size
   line = $x.backtrace[i].sub(Dir.pwd,'')
   colons = line.split(':')
@@ -109,10 +110,62 @@ for i in 0...$x.backtrace.size
   end
   msg << ""\n"" if i != $x.backtrace.size - 1
 end
-print msg"); // Print error
+msg"); // Print error
                 Internal.rb_gv_set("$x", Internal.QNil);
                 Internal.rb_set_errinfo(Internal.QNil);
+                string text = new RubyString(msg).ToString();
+                new ErrorBox(MainWindow, text).Show();
             }
+        }
+
+        protected static IntPtr p(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            StringBuilder msg = new StringBuilder();
+            for (int i = 0; i < Args.Length; i++)
+            {
+                string value = new RubyString(Internal.rb_funcallv(Args[i].Pointer, Internal.rb_intern("inspect"), 0)).ToString();
+                for (int j = 0; j < value.Length / 96; j++)
+                {
+                    value = value.Insert(j + j * 96, "\n");
+                }
+                msg.Append(value);
+                if (i != Args.Length - 1) msg.AppendLine();
+            }
+            string text = msg.ToString();
+            int newlines = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n') newlines++;
+                if (newlines == 24) text = text.Substring(0, i);
+            }
+            new StandardBox(MainWindow, text).Show();
+            return _args;
+        }
+
+        protected static IntPtr puts(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            StringBuilder msg = new StringBuilder();
+            for (int i = 0; i < Args.Length; i++)
+            {
+                string value = new RubyString(Internal.rb_funcallv(Args[i].Pointer, Internal.rb_intern("to_s"), 0)).ToString();
+                for (int j = 0; j < value.Length / 96; j++)
+                {
+                    value = value.Insert(j + j * 96, "\n");
+                }
+                msg.Append(value);
+                if (i != Args.Length - 1) msg.AppendLine();
+            }
+            string text = msg.ToString();
+            int newlines = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n') newlines++;
+                if (newlines == 24) text = text.Substring(0, i);
+            }
+            new StandardBox(MainWindow, text).Show();
+            return _args;
         }
     }
 }

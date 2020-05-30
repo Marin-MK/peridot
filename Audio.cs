@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Audio : RubyObject
     {
-        public static IntPtr ModulePointer;
+        public static IntPtr Module;
 
         public static Module CreateModule()
         {
             Module m = new Module("Audio");
-            ModulePointer = m.Pointer;
+            Module = m.Pointer;
             m.DefineClassMethod("se_play", se_play);
             return m;
         }
 
-        static IntPtr se_play(IntPtr _self, IntPtr _args)
+        protected static IntPtr se_play(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            return _self;
+            return Internal.QTrue;
         }
     }
 }

@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using RubyDotNET;
 
-namespace odlgss
+namespace Peridot
 {
     public class Rect : RubyObject
     {
-        public ODL.Rect RectObject;
-        public IntPtr ViewportPointer;
-        public static IntPtr ClassPointer { get; set; }
-        public static Dictionary<IntPtr, Rect> Rects = new Dictionary<IntPtr, Rect>();
+        public static IntPtr Class;
 
         public static Class CreateClass()
         {
             Class c = new Class("Rect");
-            ClassPointer = c.Pointer;
-            c.DefineClassMethod("new", New);
+            Class = c.Pointer;
+            c.DefineClassMethod("new", _new);
             c.DefineMethod("initialize", initialize);
             c.DefineMethod("x", xget);
             c.DefineMethod("x=", xset);
@@ -29,199 +27,150 @@ namespace odlgss
             return c;
         }
 
-        private Rect()
+        public static ODL.Rect CreateRect(IntPtr self)
         {
-            this.Pointer = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("allocate"), 0);
-            Rects[Pointer] = this;
-        }
-
-        public static Rect New(int X, int Y, int Width, int Height)
-        {
-            IntPtr ptr = Internal.rb_funcallv(ClassPointer, Internal.rb_intern("new"), 4,
-                Internal.LONG2NUM(X),
-                Internal.LONG2NUM(Y),
-                Internal.LONG2NUM(Width),
-                Internal.LONG2NUM(Height)
-            );
-            return Rects[ptr];
-        }
-        public void Initialize(int X, int Y, int Width, int Height)
-        {
-            RectObject = new ODL.Rect(X, Y, Width, Height);
-            this.X = X;
-            this.Y = Y;
-            this.Width = Width;
-            this.Height = Height;
-        }
-
-        public int X
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("x"), 0, IntPtr.Zero));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("x="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Y
-        {
-            get
-            {
-                return (int)Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("y"), 0, IntPtr.Zero));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("y="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Width
-        {
-            get
-            {
-                return (int)Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("width"), 0, IntPtr.Zero));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("width="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public int Height
-        {
-            get
-            {
-                return (int)Internal.NUM2LONG(Internal.rb_funcallv(Pointer, Internal.rb_intern("height"), 0, IntPtr.Zero));
-            }
-            set
-            {
-                Internal.rb_funcallv(Pointer, Internal.rb_intern("height="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public void Set(Rect r)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("set"), 1, r.Pointer);
-        }
-        public void Set(int X, int Y, int Width, int Height)
-        {
-            Internal.rb_funcallv(Pointer, Internal.rb_intern("set"), 4,
-                Internal.LONG2NUM(X),
-                Internal.LONG2NUM(Y),
-                Internal.LONG2NUM(Width),
-                Internal.LONG2NUM(Height)
+            return new ODL.Rect(
+                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@x")),
+                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@y")),
+                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")),
+                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height"))
             );
         }
 
-        static IntPtr New(IntPtr _self, IntPtr _args)
+        public static IntPtr CreateRect(ODL.Rect Rect)
         {
-            Rect r = new Rect();
+            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
+            {
+                Internal.LONG2NUM(Rect.X),
+                Internal.LONG2NUM(Rect.Y),
+                Internal.LONG2NUM(Rect.Width),
+                Internal.LONG2NUM(Rect.Height)
+            });
+        }
+
+        public static IntPtr CreateRect(ODL.Size Size)
+        {
+            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
+            {
+                Internal.LONG2NUM(0),
+                Internal.LONG2NUM(0),
+                Internal.LONG2NUM(Size.Width),
+                Internal.LONG2NUM(Size.Height)
+            });
+        }
+
+        protected static IntPtr allocate(IntPtr Class)
+        {
+            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
+        }
+
+        protected static IntPtr _new(IntPtr self, IntPtr _args)
+        {
             RubyArray Args = new RubyArray(_args);
-            IntPtr[] newargs = new IntPtr[Args.Length];
-            for (int i = 0; i < Args.Length; i++) newargs[i] = Args[i].Pointer;
-            Internal.rb_funcallv(r.Pointer, Internal.rb_intern("initialize"), Args.Length, newargs);
-            return r.Pointer;
+            IntPtr obj = allocate(self);
+            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
+            return obj;
         }
-        static IntPtr initialize(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr initialize(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(4, Args);
-
-            int x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-            int y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-            int w = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-            int h = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0, IntPtr.Zero));
-
-            Rects[_self].Initialize(x, y, w, h);
-            return _self;
+            IntPtr X = Args[0].Pointer;
+            IntPtr Y = Args[1].Pointer;
+            IntPtr Width = Args[2].Pointer;
+            IntPtr Height = Args[3].Pointer;
+            Internal.SetIVar(self, "@x", X);
+            Internal.SetIVar(self, "@y", Y);
+            Internal.SetIVar(self, "@width", Width);
+            Internal.SetIVar(self, "@height", Height);
+            return self;
         }
 
-        static IntPtr xget(IntPtr _self, IntPtr _args)
+        protected static IntPtr xget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@x"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@x");
         }
-        static IntPtr xset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr xset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Rects[_self].RectObject.X = (int) Internal.NUM2LONG(Args[0].Pointer);
-            if (Rects[_self].ViewportPointer != IntPtr.Zero)
-                Viewport.Viewports[Rects[_self].ViewportPointer].ViewportObject.X = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@x"), Args[0].Pointer);
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@x", Args[0].Pointer);
         }
 
-        static IntPtr yget(IntPtr _self, IntPtr _args)
+        protected static IntPtr yget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@y"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@y");
         }
-        static IntPtr yset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr yset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Rects[_self].RectObject.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
-            if (Rects[_self].ViewportPointer != IntPtr.Zero)
-                Viewport.Viewports[Rects[_self].ViewportPointer].ViewportObject.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@y"), Args[0].Pointer);
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@y", Args[0].Pointer);
         }
 
-        static IntPtr widthget(IntPtr _self, IntPtr _args)
+        protected static IntPtr widthget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@width"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@width");
         }
-        static IntPtr widthset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr widthset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Rects[_self].RectObject.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
-            if (Rects[_self].ViewportPointer != IntPtr.Zero)
-                Viewport.Viewports[Rects[_self].ViewportPointer].ViewportObject.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@width"), Args[0].Pointer);
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@width", Args[0].Pointer);
         }
 
-        static IntPtr heightget(IntPtr _self, IntPtr _args)
+        protected static IntPtr heightget(IntPtr self, IntPtr _args)
         {
-            return Internal.rb_ivar_get(_self, Internal.rb_intern("@height"));
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@height");
         }
-        static IntPtr heightset(IntPtr _self, IntPtr _args)
+
+        protected static IntPtr heightset(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Rects[_self].RectObject.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
-            if (Rects[_self].ViewportPointer != IntPtr.Zero)
-                Viewport.Viewports[Rects[_self].ViewportPointer].ViewportObject.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.rb_ivar_set(_self, Internal.rb_intern("@height"), Args[0].Pointer);
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+            return Internal.SetIVar(self, "@height", Args[0].Pointer);
         }
 
-        static IntPtr set(IntPtr _self, IntPtr _args)
+        protected static IntPtr set(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
-            int x = 0,
-                y = 0,
-                w = 0,
-                h = 0;
-            if (Args.Length == 1)
+            ScanArgs(4, Args);
+            int x = (int) Internal.NUM2LONG(Args[0].Pointer);
+            int y = (int) Internal.NUM2LONG(Args[1].Pointer);
+            int w = (int) Internal.NUM2LONG(Args[2].Pointer);
+            int h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            Internal.SetIVar(self, "@x", Args[0].Pointer);
+            Internal.SetIVar(self, "@y", Args[1].Pointer);
+            Internal.SetIVar(self, "@width", Args[2].Pointer);
+            Internal.SetIVar(self, "@height", Args[3].Pointer);
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Rect r = Rect.Rects[Args[0].Pointer];
-                x = r.X;
-                y = r.Y;
-                w = r.Width;
-                h = r.Height;
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = x;
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = y;
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = w;
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = h;
             }
-            else if (Args.Length == 4)
-            {
-                x = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("to_i"), 0));
-                y = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[1].Pointer, Internal.rb_intern("to_i"), 0));
-                w = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[2].Pointer, Internal.rb_intern("to_i"), 0));
-                h = (int) Internal.NUM2LONG(Internal.rb_funcallv(Args[3].Pointer, Internal.rb_intern("to_i"), 0));
-            }
-            else
-            {
-                ScanArgs(4, Args);
-            }
-            Rects[_self].X = x;
-            Rects[_self].Y = y;
-            Rects[_self].Width = w;
-            Rects[_self].Height = h;
-            return _self;
+            return self;
         }
     }
 }
