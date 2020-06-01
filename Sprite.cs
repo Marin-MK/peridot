@@ -46,6 +46,10 @@ namespace Peridot
             c.DefineMethod("mirror_x=", mirror_xset);
             c.DefineMethod("mirror_y", mirror_yget);
             c.DefineMethod("mirror_y=", mirror_yset);
+            c.DefineMethod("color", colorget);
+            c.DefineMethod("color=", colorset);
+            c.DefineMethod("tone", toneget);
+            c.DefineMethod("tone=", toneset);
             c.DefineMethod("update", update);
             c.DefineMethod("dispose", dispose);
             c.DefineMethod("disposed?", disposed);
@@ -88,6 +92,12 @@ namespace Peridot
             Internal.SetIVar(self, "@visible", Internal.QTrue);
             Internal.SetIVar(self, "@mirror_x", Internal.QFalse);
             Internal.SetIVar(self, "@mirror_y", Internal.QFalse);
+            IntPtr color = Color.CreateColor(ODL.Color.ALPHA);
+            Internal.SetIVar(self, "@color", color);
+            Internal.SetIVar(color, "@__sprite__", self);
+            IntPtr tone = Tone.CreateTone(new ODL.Tone());
+            Internal.SetIVar(self, "@tone", tone);
+            Internal.SetIVar(tone, "@__sprite__", self);
 
             if (!Viewport.ViewportDictionary.ContainsKey(viewport)) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "invalid viewport");
             ODL.Sprite sprite = new ODL.Sprite(Viewport.ViewportDictionary[viewport]);
@@ -367,6 +377,42 @@ namespace Peridot
             return Internal.SetIVar(self, "@mirror_y", Args[0].Pointer);
         }
 
+        protected static IntPtr colorget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@color");
+        }
+
+        protected static IntPtr colorset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
+            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
+            return Internal.SetIVar(self, "@color", Args[0].Pointer);
+        }
+
+        protected static IntPtr toneget(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Internal.GetIVar(self, "@tone");
+        }
+
+        protected static IntPtr toneset(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
+            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
+            return Internal.SetIVar(self, "@tone", Args[0].Pointer);
+        }
+
         protected static IntPtr update(IntPtr self, IntPtr _args)
         {
             GuardDisposed(self);
@@ -407,7 +453,7 @@ namespace Peridot
             return Internal.GetIVar(self, "@disposed") == Internal.QTrue ? Internal.QTrue : Internal.QFalse;
         }
 
-        protected static void GuardDisposed(IntPtr self)
+        public static void GuardDisposed(IntPtr self)
         {
             if (disposed(self, IntPtr.Zero) == Internal.QTrue)
             {
