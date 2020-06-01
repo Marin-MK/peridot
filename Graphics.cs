@@ -44,6 +44,7 @@ namespace Peridot
             m.DefineClassMethod("brightness=", brightnessset);
             m.DefineClassMethod("frame_count", frame_countget);
             m.DefineClassMethod("frame_count=", frame_countset);
+            m.DefineClassMethod("transition", transition);
             m.DefineClassMethod("update", update);
             m.DefineClassMethod("wait", wait);
             return m;
@@ -62,6 +63,7 @@ namespace Peridot
                 Internal.GetIVar(Module, "@width"),
                 Internal.GetIVar(Module, "@height")
             });
+            Internal.rb_funcallv(MainViewport, Internal.rb_intern("z="), 1, new IntPtr[] { Internal.LONG2NUM(999999998) });
             Internal.SetIVar(Font.Class, "@default_name", Internal.rb_str_new_cstr("arial"));
             Internal.SetIVar(Font.Class, "@default_size", Internal.LONG2NUM(32));
             Internal.SetIVar(Font.Class, "@default_color", Color.CreateColor(ODL.Color.WHITE));
@@ -174,8 +176,49 @@ namespace Peridot
             return Internal.SetIVar(self, "@frame_count", Args[0].Pointer);
         }
 
-        protected static IntPtr update(IntPtr _self, IntPtr _args)
+        protected static IntPtr transition(IntPtr self, IntPtr _args)
         {
+            RubyArray Args = new RubyArray(_args);
+            int Duration = 0;
+            string Filename = null;
+            if (Args.Length == 2)
+            {
+                Duration = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Filename = new RubyString(Args[1].Pointer).ToString();
+            }
+            else if (Args.Length == 1)
+            {
+                Duration = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            else ScanArgs(1, Args);
+
+            ODL.Viewport vp = new ODL.Viewport(0, 0, (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")), (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height")));
+            vp.Z = 999999999;
+            ODL.Sprite sp = new ODL.Sprite(vp);
+            sp.Z = 999999999;
+            if (string.IsNullOrEmpty(Filename))
+            {
+                sp.Bitmap = new ODL.Bitmap(vp.Width, vp.Height);
+                sp.Bitmap.Unlock();
+                sp.Bitmap.FillRect(0, 0, vp.Width, vp.Height, ODL.Color.BLACK);
+                sp.Bitmap.Lock();
+            }
+            else sp.Bitmap = new ODL.Bitmap(Filename);
+            sp.Opacity = 0;
+            for (int i = 1; i <= Duration; i++)
+            {
+                Internal.rb_funcallv(self, Internal.rb_intern("update"), 0);
+                sp.Opacity = (byte) Math.Round((double) i / Duration * 255d);
+            }
+            sp.Dispose();
+            vp.Dispose();
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr update(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
             if (!ODL.Graphics.Initialized) Internal.rb_raise(Internal.rb_eSystemExit.Pointer, "game stopped");
 
             FrameTimer.Start();
@@ -196,7 +239,7 @@ namespace Peridot
             {
                 SDL2.SDL.SDL_Delay((uint) (TicksPerFrame - frameTicks));
             }
-            return _self;
+            return Internal.QTrue;
         }
 
         protected static IntPtr wait(IntPtr self, IntPtr _args)
