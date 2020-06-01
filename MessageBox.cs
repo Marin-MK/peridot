@@ -40,7 +40,7 @@ namespace Peridot
             boxdata.message = this.Message;
             boxdata.numbuttons = Buttons.Count;
             boxdata.title = this.Title;
-            boxdata.window = this.Parent.SDL_Window;
+            boxdata.window = this.Parent == null ? IntPtr.Zero : this.Parent.SDL_Window;
             int result = -1;
             SDL_ShowMessageBox(ref boxdata, out result);
             return result;
@@ -50,7 +50,7 @@ namespace Peridot
     public class StandardBox : MessageBox
     {
         public StandardBox(ODL.Window Parent, string Message)
-            : base(Parent, Parent.Text, Message, 0, new List<string>() { "OK" })
+            : base(Parent, Parent == null ? "peridot" : Parent.Text, Message, 0, new List<string>() { "OK" })
         {
 
         }

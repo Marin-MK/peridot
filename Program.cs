@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ODL;
 using RubyDotNET;
+using System.IO;
 
 namespace Peridot
 {
@@ -15,20 +16,35 @@ namespace Peridot
 
         public static void Main(string[] args)
         {
-            Internal.Initialize();
+            try
+            {
+                Internal.Initialize();
+            }
+            catch (Exception ex)
+            {
+                Error($"Failed to initialize Ruby.\n\n{ex}");
+            }
 
-            Graphics.CreateModule();
-            Input.CreateModule();
-            Audio.CreateModule();
-            Viewport.CreateClass();
-            Sprite.CreateClass();
-            Bitmap.CreateClass();
-            Color.CreateClass();
-            Rect.CreateClass();
-            Font.CreateClass();
-            //Tone.CreateClass();
+            try
+            {
+                Graphics.CreateModule();
+                Input.CreateModule();
+                Audio.CreateModule();
+                Viewport.CreateClass();
+                Sprite.CreateClass();
+                Bitmap.CreateClass();
+                Color.CreateClass();
+                Tone.CreateClass();
+                Rect.CreateClass();
+                Font.CreateClass();
+            }
+            catch (Exception ex)
+            {
+                Error($"Failed to create Ruby bindings.\n\n{ex}");
+            }
 
-            Config.LoadSettings(Assembly.GetExecutingAssembly().GetName().Name + ".json", "peridot.json", "config.json");
+            string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            Config.LoadSettings(AssemblyName + ".json", AssemblyName + "-config.json", "peridot.json", "config.json", "game.json", "game-config.json");
 
             int Width = Config.WindowWidth;
             int Height = Config.WindowHeight;
@@ -40,14 +56,42 @@ namespace Peridot
             Internal.rb_cObject.DefineMethod("p", p);
             Internal.rb_cObject.DefineMethod("puts", puts);
 
+            if (Config.FakeWin32API)
+            {
+                Win32API.CreateClass();
+                Internal.rb_define_class("Plane", Sprite.Class);
+                Internal.rb_define_class("Tilemap", Sprite.Class);
+                Internal.rb_cObject.DefineMethod("load_data", Win32API.load_data);
+                Internal.rb_cObject.DefineMethod("save_data", Win32API.save_data);
+                Internal.rb_cThread.DefineClassMethod("critical", Win32API.criticalget);
+                Internal.rb_cThread.DefineClassMethod("critical=", Win32API.criticalset);
+                Table.CreateClass();
+                Internal.GetKlass("Graphics").DefineClassMethod("freeze", Win32API.freeze);
+                Internal.GetKlass("Graphics").DefineClassMethod("frame_reset", Win32API.frame_reset);
+                Internal.GetKlass("Sprite").DefineMethod("bush_depth", Win32API.bush_depthget);
+                Internal.GetKlass("Sprite").DefineMethod("bush_depth=", Win32API.bush_depthset);
+                Internal.GetKlass("Sprite").DefineMethod("blend_type", Win32API.blend_typeget);
+                Internal.GetKlass("Sprite").DefineMethod("blend_type=", Win32API.blend_typeset);
+            }
+
             ODL.Graphics.Start();
-            if (string.IsNullOrEmpty(Config.Script)) throw new Exception($"No starting script found (use the 'script' key in the configuration file).");
+
+            if (string.IsNullOrEmpty(Config.Script)) Error($"No starting script found (use the 'script' key in the configuration file).");
+            else
+            {
+                Config.Script = Path.GetFullPath(Config.Script);
+                if (!File.Exists(Config.Script)) Error($"Could not find starting script at '{Config.Script}'.");
+            }
 
             MainWindow = new Window();
-            if (!string.IsNullOrEmpty(Config.WindowIcon)) MainWindow.SetIcon(Config.WindowIcon);
+            if (!string.IsNullOrEmpty(Config.WindowIcon))
+            {
+                if (!File.Exists(Config.WindowIcon) && !File.Exists(Config.WindowIcon + ".png")) Error($"Could not find an image to use as the window icon at '{Config.WindowIcon}'");
+                MainWindow.SetIcon(Config.WindowIcon);
+            }
             MainWindow.SetText(Config.WindowTitle);
-            MainWindow.SetResizable(false);
-            MainWindow.SetSize(Width, Height);
+            MainWindow.SetResizable(Config.WindowResizable);
+            MainWindow.SetSize((int) Math.Round(Width * Config.WindowScale), (int) Math.Round(Height * Config.WindowScale));
             MainWindow.SetBackgroundColor(Config.BackgroundColor);
             MainWindow.Show();
             ODL.Graphics.Update(); // Ensure the renderer updates to show the black background color while loading the game
@@ -55,16 +99,53 @@ namespace Peridot
             {
                 ODL.Graphics.Stop();
             };
+            MainWindow.Renderer.RenderScaleX = (float) Config.WindowScale;
+            MainWindow.Renderer.RenderScaleY = (float) Config.WindowScale;
+            MainWindow.OnSizeChanged += delegate (BaseEventArgs e)
+            {
+                float xscale = (float) MainWindow.Width / Config.WindowWidth;
+                float yscale = (float) MainWindow.Height / Config.WindowHeight;
+                if (Config.MaintainAspectRatio)
+                {
+                    MainWindow.Renderer.RenderOffsetX = 0;
+                    MainWindow.Renderer.RenderOffsetY = 0;
+                    if (xscale > yscale) xscale = yscale;
+                    else if (xscale < yscale) yscale = xscale;
+                }
+                MainWindow.Renderer.RenderScaleX = xscale;
+                MainWindow.Renderer.RenderScaleY = yscale;
+                if (Config.MaintainAspectRatio)
+                {
+                    int w = (int) Math.Round(xscale * Config.WindowWidth);
+                    int h = (int) Math.Round(yscale * Config.WindowHeight);
+                    if (MainWindow.Width != w || MainWindow.Height != h) MainWindow.SetSize(w, h);
+                }
+            };
 
             Graphics.Start();
 
             // Sets extension load paths and working directory
             PrepareLoadPath();
 
+            try
+            {
+                Internal.Eval("require 'zlib'");
+            }
+            catch (Exception ex)
+            {
+                Error($"Failed to link zlib.\n\n{ex}");
+            }
+
             // Runs the script and returns raises a RuntimeError when window is closed.
             LoadScript(Config.Script);
 
             if (!MainWindow.IsClosed) MainWindow.Close();
+        }
+
+        public static void Error(string Message)
+        {
+            new ErrorBox(MainWindow, Message).Show();
+            Environment.Exit(1);
         }
 
         public static void PrepareLoadPath()
@@ -137,7 +218,7 @@ msg"); // Print error
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n') newlines++;
-                if (newlines == 24) text = text.Substring(0, i);
+                if (newlines == 24) text = text.Substring(0, i) + "...";
             }
             new StandardBox(MainWindow, text).Show();
             return _args;
@@ -162,7 +243,7 @@ msg"); // Print error
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n') newlines++;
-                if (newlines == 24) text = text.Substring(0, i);
+                if (newlines == 24) text = text.Substring(0, i) + "...";
             }
             new StandardBox(MainWindow, text).Show();
             return _args;

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>x64</Platforms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
@@ -13,11 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\odl\odl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>bin\x64\Debug\netcoreapp3.1\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="odl">
-      <HintPath>..\odl\bin\x64\Debug\netcoreapp3.1\odl.dll</HintPath>
     </Reference>
     <Reference Include="RubyDotNET">
       <HintPath>..\rubydotnet\bin\x64\Debug\netcoreapp3.1\RubyDotNET.dll</HintPath>

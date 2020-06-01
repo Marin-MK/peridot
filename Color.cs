@@ -14,6 +14,7 @@ namespace Peridot
             Class c = new Class("Color");
             Class = c.Pointer;
             c.DefineClassMethod("new", _new);
+            c.DefineClassMethod("_load", _load);
             c.DefineMethod("initialize", initialize);
             c.DefineMethod("red", redget);
             c.DefineMethod("red=", redset);
@@ -83,6 +84,22 @@ namespace Peridot
             return self;
         }
 
+        protected static IntPtr _load(IntPtr _self, IntPtr _args)//int argc, IntPtr[] argv, IntPtr self)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            
+            RubyArray ary = new RubyArray(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("unpack"), 1, Internal.rb_str_new_cstr("D*")));
+
+            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
+            {
+                ary[0].Pointer, 
+                ary[1].Pointer,
+                ary[2].Pointer,
+                ary[3].Pointer
+            });
+        }
+
         protected static IntPtr redget(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
@@ -94,6 +111,14 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@red", Args[0].Pointer);
         }
 
@@ -108,6 +133,14 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@green", Args[0].Pointer);
         }
 
@@ -122,6 +155,14 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@blue", Args[0].Pointer);
         }
 
@@ -136,6 +177,14 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@alpha", Args[0].Pointer);
         }
     }

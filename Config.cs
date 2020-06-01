@@ -13,10 +13,14 @@ namespace Peridot
         public static int WindowHeight = 320;
         public static string WindowIcon = null;
         public static string WindowTitle = "Peridot";
+        public static bool WindowResizable = true;
+        public static double WindowScale = 1d;
+        public static bool MaintainAspectRatio = true;
         public static string Script = null;
         public static ODL.Color BackgroundColor = ODL.Color.BLACK;
         public static List<string> RubyLoadPath = new List<string>();
         public static string MainDirectory = null;
+        public static bool FakeWin32API = false;
 
         public static void LoadSettings(params string[] Filenames)
         {
@@ -34,7 +38,7 @@ namespace Peridot
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception($"An error occured while loading the config JSON. It is likely not a valid JSON format.\n\n{ex}");
+                        Program.Error($"An error occured while loading the config JSON. It is likely not a valid JSON format.\n\n{ex}");
                     }
                     foreach (string key in data.Keys)
                     {
@@ -44,17 +48,17 @@ namespace Peridot
                             case "frame_rate":
                                 EnsureType(typeof(long), value, key);
                                 FrameRate = Convert.ToInt32(value);
-                                if (FrameRate < 1) throw new Exception($"The framerate specified by the config JSON must be at least 1.");
+                                if (FrameRate < 1) Program.Error($"The framerate specified by the config JSON must be at least 1.");
                                 break;
                             case "window_width":
                                 EnsureType(typeof(long), value, key);
                                 WindowWidth = Convert.ToInt32(value);
-                                if (WindowWidth < 1) throw new Exception($"The window width specified by the config JSON must be at least 1.");
+                                if (WindowWidth < 1) Program.Error($"The window width specified by the config JSON must be at least 1.");
                                 break;
                             case "window_height":
                                 EnsureType(typeof(long), value, key);
                                 WindowHeight = Convert.ToInt32(value);
-                                if (WindowHeight < 1) throw new Exception($"The window height specified by the config JSON must be at least 1.");
+                                if (WindowHeight < 1) Program.Error($"The window height specified by the config JSON must be at least 1.");
                                 break;
                             case "window_icon":
                                 EnsureType(typeof(string), value, key);
@@ -63,6 +67,18 @@ namespace Peridot
                             case "window_title":
                                 EnsureType(typeof(string), value, key);
                                 WindowTitle = (string) value;
+                                break;
+                            case "window_resizable":
+                                EnsureType(typeof(bool), value, key);
+                                WindowResizable = Convert.ToBoolean(value);
+                                break;
+                            case "window_scale":
+                                EnsureTypes(value, key, typeof(double), typeof(long));
+                                WindowScale = Convert.ToDouble(value);
+                                break;
+                            case "maintain_aspect_ratio":
+                                EnsureType(typeof(bool), value, key);
+                                MaintainAspectRatio = Convert.ToBoolean(value);
                                 break;
                             case "script":
                                 EnsureType(typeof(string), value, key);
@@ -77,7 +93,7 @@ namespace Peridot
                                 List<object> paths = ((JArray) value).ToObject<List<object>>();
                                 foreach (object path in paths)
                                 {
-                                    if (!(path is string)) throw new Exception($"Expected a value of type String, but got a value of type {path.GetType().Name} in element in key 'ruby_load_path'");
+                                    if (!(path is string)) Program.Error($"Expected a value of type String, but got a value of type {path.GetType().Name} in element in key 'ruby_load_path'");
                                     RubyLoadPath.Add((string) path);
                                 }
                                 break;
@@ -85,8 +101,13 @@ namespace Peridot
                                 EnsureType(typeof(string), value, key);
                                 MainDirectory = (string) value;
                                 break;
+                            case "fake_win32api":
+                                EnsureType(typeof(bool), value, key);
+                                FakeWin32API = Convert.ToBoolean(value);
+                                break;
                             default:
-                                throw new Exception($"Unknown key in the config JSON: '{key}'");
+                                Program.Error($"Unknown key in the config JSON: '{key}'");
+                                break;
                         }
                     }
                     break;
@@ -108,29 +129,30 @@ namespace Peridot
                     case "red":
                         EnsureType(typeof(long), value, key);
                         int red = Convert.ToInt32(value);
-                        if (red < 0 || red > 255) throw new Exception($"Red color component ({red}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
+                        if (red < 0 || red > 255) Program.Error($"Red color component ({red}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
                         R = (byte) red;
                         break;
                     case "green":
                         EnsureType(typeof(long), value, key);
                         int green = Convert.ToInt32(value);
-                        if (green < 0 || green > 255) throw new Exception($"Green color component ({green}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
+                        if (green < 0 || green > 255) Program.Error($"Green color component ({green}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
                         G = (byte) green;
                         break;
                     case "blue":
                         EnsureType(typeof(long), value, key);
                         int blue = Convert.ToInt32(value);
-                        if (blue < 0 || blue > 255) throw new Exception($"Blue color component ({blue}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
+                        if (blue < 0 || blue > 255) Program.Error($"Blue color component ({blue}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
                         B = (byte) blue;
                         break;
                     case "alpha":
                         EnsureType(typeof(long), value, key);
                         int alpha = Convert.ToInt32(value);
-                        if (alpha < 0 || alpha > 255) throw new Exception($"Alpha color component ({alpha}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
+                        if (alpha < 0 || alpha > 255) Program.Error($"Alpha color component ({alpha}) must be between 0 and 255 in config JSON, color definition in '{mainkey}'");
                         A = (byte) alpha;
                         break;
                     default:
-                        throw new Exception($"Unknown key in the config JSON, color definition in '{mainkey}', key '{key}'");
+                        Program.Error($"Unknown key in the config JSON, color definition in '{mainkey}', key '{key}'");
+                        break;
                 }
             }
             return new ODL.Color(R, G, B, A);
@@ -140,8 +162,21 @@ namespace Peridot
         {
             if (value.GetType() != type)
             {
-                throw new Exception($"Expected a value of type {type.GetType().Name}, but got a value of type {value.GetType().Name} in JSON config key '{key}'");
+                Program.Error($"Expected a value of type {type.GetType().Name}, but got a value of type {value.GetType().Name} in JSON config key '{key}'");
             }
+        }
+
+        public static void EnsureTypes(object value, string key, params Type[] types)
+        {
+            string typestr = "";
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (value.GetType() == types[i]) return;
+                typestr += types[i].Name;
+                if (i < types.Length - 1 && types.Length != 2) typestr += ", ";
+                else if (i == types.Length - 2) typestr += " or ";
+            }
+            Program.Error($"Expected a value of type {typestr}, but got a value of type {value.GetType().Name} in JSON config key '{key}'");
         }
     }
 }
