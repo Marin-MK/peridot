@@ -55,8 +55,8 @@ namespace Peridot
                 else if (function == "GetCursorPos")
                 {
                     RubyArray Array = new RubyArray(2);
-                    Array[0] = new RubyInt(ODL.Graphics.LastMouseEvent.X);
-                    Array[1] = new RubyInt(ODL.Graphics.LastMouseEvent.Y);
+                    Array[0] = new RubyInt(odl.Graphics.LastMouseEvent.X);
+                    Array[1] = new RubyInt(odl.Graphics.LastMouseEvent.Y);
                     return Array.Pointer;
                 }
                 else if (function == "GetWindowRect")

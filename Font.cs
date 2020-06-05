@@ -51,15 +51,15 @@ namespace Peridot
             });
         }
 
-        public static ODL.Font CreateFont(IntPtr self)
+        public static odl.Font CreateFont(IntPtr self)
         {
             string folder = null;
             if (Internal.GetIVar(Class, "@default_folder") != Internal.QNil) folder = new RubyString(Internal.GetIVar(Class, "@default_folder")).ToString();
             string name = new RubyString(Internal.GetIVar(self, "@name")).ToString();
             int size = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@size"));
-            if (!string.IsNullOrEmpty(folder) && ODL.Font.Exists(folder + "/" + name))
-                return ODL.Font.Get(folder + "/" + name, size);
-            else return ODL.Font.Get(name, size);
+            if (!string.IsNullOrEmpty(folder) && odl.Font.Exists(folder + "/" + name))
+                return odl.Font.Get(folder + "/" + name, size);
+            else return odl.Font.Get(name, size);
         }
 
         public static IntPtr default_folderget(IntPtr self, IntPtr _args)

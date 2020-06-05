@@ -8,7 +8,7 @@ namespace Peridot
     public class Viewport : RubyObject
     {
         public static IntPtr Class;
-        public static Dictionary<IntPtr, ODL.Viewport> ViewportDictionary = new Dictionary<IntPtr, ODL.Viewport>();
+        public static Dictionary<IntPtr, odl.Viewport> ViewportDictionary = new Dictionary<IntPtr, odl.Viewport>();
 
         public static Class CreateClass()
         {
@@ -62,11 +62,11 @@ namespace Peridot
                 h = 0;
             if (Args.Length == 1)
             {
-                rect = Args[0].Pointer;
                 x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
                 y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
                 w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
                 h = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@height"));
+                rect = Args[0].Pointer;
                 Internal.SetIVar(self, "@rect", rect);
             }
             else if (Args.Length == 4)
@@ -75,19 +75,25 @@ namespace Peridot
                 y = (int) Internal.NUM2LONG(Args[1].Pointer);
                 w = (int) Internal.NUM2LONG(Args[2].Pointer);
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
-                Internal.SetIVar(self, "@rect", Rect.CreateRect(new ODL.Rect(x, y, w, h)));
+                rect = Rect.CreateRect(new odl.Rect(x, y, w, h));
+                Internal.SetIVar(self, "@rect", rect);
             }
             else ScanArgs(4, Args);
+            Internal.SetIVar(rect, "@__viewport__", self);
             Internal.SetIVar(self, "@ox", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@oy", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@z", Internal.LONG2NUM(0));
-            IntPtr color = Color.CreateColor(ODL.Color.ALPHA);
+            IntPtr color = Color.CreateColor(odl.Color.ALPHA);
             Internal.SetIVar(self, "@color", color);
             Internal.SetIVar(color, "@__viewport__", self);
 
-            ODL.Viewport vp = new ODL.Viewport(x, y, w, h);
+            odl.Viewport vp = new odl.Viewport(x, y, w, h);
 
-            if (ViewportDictionary.ContainsKey(self)) dispose(self, IntPtr.Zero);
+            if (ViewportDictionary.ContainsKey(self))
+            {
+                ViewportDictionary[self].Dispose();
+                ViewportDictionary.Remove(self);
+            }
             ViewportDictionary.Add(self, vp);
             return self;
         }
@@ -105,10 +111,12 @@ namespace Peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@__viewport__", Internal.QNil);
             ViewportDictionary[self].X = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
             ViewportDictionary[self].Y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
             ViewportDictionary[self].Width = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
             ViewportDictionary[self].Height = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@height"));
+            Internal.SetIVar(Args[0].Pointer, "@__viewport__", self);
             return Internal.SetIVar(self, "@rect", Args[0].Pointer);
         }
 
@@ -210,6 +218,7 @@ namespace Peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__viewport__", Internal.QNil);
             ViewportDictionary[self].Color = Color.CreateColor(Args[0].Pointer);
             Internal.SetIVar(Args[0].Pointer, "@__viewport__", self);
             return Internal.SetIVar(self, "@color", Args[0].Pointer);
@@ -259,6 +268,8 @@ namespace Peridot
             }
             ViewportDictionary[self].Dispose();
             ViewportDictionary.Remove(self);
+            Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@__viewport__", Internal.QNil);
+            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__viewport__", Internal.QNil);
             Internal.SetIVar(self, "@disposed", Internal.QTrue);
             return Internal.QTrue;
         }

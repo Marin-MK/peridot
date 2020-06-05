@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using ODL;
+using odl;
 using RubyDotNET;
 using System.IO;
 
@@ -30,6 +30,7 @@ namespace Peridot
                 Graphics.CreateModule();
                 Input.CreateModule();
                 Audio.CreateModule();
+                Sound.CreateClass();
                 Viewport.CreateClass();
                 Sprite.CreateClass();
                 Bitmap.CreateClass();
@@ -74,7 +75,8 @@ namespace Peridot
                 Internal.GetKlass("Sprite").DefineMethod("blend_type=", Win32API.blend_typeset);
             }
 
-            ODL.Graphics.Start();
+            odl.Graphics.Start();
+            odl.Audio.Start();
 
             if (string.IsNullOrEmpty(Config.Script)) Error($"No starting script found (use the 'script' key in the configuration file).");
             else
@@ -84,20 +86,22 @@ namespace Peridot
             }
 
             MainWindow = new Window();
+            MainWindow.Initialize(true, true);
+            MainWindow.SetText(Config.WindowTitle);
+            MainWindow.SetResizable(Config.WindowResizable);
+            MainWindow.SetSize((int) Math.Round(Width * Config.WindowScale), (int) Math.Round(Height * Config.WindowScale));
+            MainWindow.SetBackgroundColor(Config.BackgroundColor);
             if (!string.IsNullOrEmpty(Config.WindowIcon))
             {
                 if (!File.Exists(Config.WindowIcon) && !File.Exists(Config.WindowIcon + ".png")) Error($"Could not find an image to use as the window icon at '{Config.WindowIcon}'");
                 MainWindow.SetIcon(Config.WindowIcon);
             }
-            MainWindow.SetText(Config.WindowTitle);
-            MainWindow.SetResizable(Config.WindowResizable);
-            MainWindow.SetSize((int) Math.Round(Width * Config.WindowScale), (int) Math.Round(Height * Config.WindowScale));
-            MainWindow.SetBackgroundColor(Config.BackgroundColor);
             MainWindow.Show();
-            ODL.Graphics.Update(); // Ensure the renderer updates to show the black background color while loading the game
+            odl.Graphics.Update(); // Ensure the renderer updates to show the black background color while loading the game
             MainWindow.OnClosed += delegate (BaseEventArgs e)
             {
-                ODL.Graphics.Stop();
+                odl.Graphics.Stop();
+                odl.Audio.Stop();
             };
             MainWindow.Renderer.RenderScaleX = (float) Config.WindowScale;
             MainWindow.Renderer.RenderScaleY = (float) Config.WindowScale;

@@ -11,25 +11,6 @@ namespace Peridot
         public static IntPtr OverlaySprite;
         public static IntPtr OverlayBitmap;
 
-        public static int FrameRate
-        {
-            get
-            {
-                return (int) Internal.NUM2LONG(Internal.rb_funcallv(Module, Internal.rb_intern("frame_rate"), 0));
-            }
-            set
-            {
-                Internal.rb_funcallv(Module, Internal.rb_intern("frame_rate="), 1, Internal.LONG2NUM(value));
-            }
-        }
-        public static int TicksPerFrame
-        {
-            get
-            {
-                return (int) Math.Round(1000d / FrameRate);
-            }
-        }
-
         public static Module CreateModule()
         {
             Module m = new Module("Graphics");
@@ -45,17 +26,16 @@ namespace Peridot
             m.DefineClassMethod("frame_count", frame_countget);
             m.DefineClassMethod("frame_count=", frame_countset);
             m.DefineClassMethod("transition", transition);
+            m.DefineClassMethod("screenshot", screenshot);
+            m.DefineClassMethod("snap_to_bitmap", screenshot);
             m.DefineClassMethod("update", update);
             m.DefineClassMethod("wait", wait);
             return m;
         }
 
-        static FPSTimer FPSTimer = new FPSTimer();
-        static FPSTimer FrameTimer = new FPSTimer();
-
         public static void Start()
         {
-            ODL.Viewport.DefaultRenderer = ODL.Graphics.Windows[0].Renderer;
+            odl.Viewport.DefaultRenderer = odl.Graphics.Windows[0].Renderer;
             MainViewport = Internal.rb_funcallv(Viewport.Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {
                 Internal.LONG2NUM(0),
@@ -66,9 +46,9 @@ namespace Peridot
             Internal.rb_funcallv(MainViewport, Internal.rb_intern("z="), 1, new IntPtr[] { Internal.LONG2NUM(999999998) });
             Internal.SetIVar(Font.Class, "@default_name", Internal.rb_str_new_cstr("arial"));
             Internal.SetIVar(Font.Class, "@default_size", Internal.LONG2NUM(32));
-            Internal.SetIVar(Font.Class, "@default_color", Color.CreateColor(ODL.Color.WHITE));
+            Internal.SetIVar(Font.Class, "@default_color", Color.CreateColor(odl.Color.WHITE));
             Internal.SetIVar(Font.Class, "@default_outline", Internal.QFalse);
-            Internal.SetIVar(Font.Class, "@default_outline_color", Color.CreateColor(ODL.Color.BLACK));
+            Internal.SetIVar(Font.Class, "@default_outline_color", Color.CreateColor(odl.Color.BLACK));
             OverlayViewport = Internal.rb_funcallv(Viewport.Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {
                 Internal.LONG2NUM(0),
@@ -95,14 +75,20 @@ namespace Peridot
                 Internal.LONG2NUM(0),
                 Internal.GetIVar(Module, "@width"),
                 Internal.GetIVar(Module, "@height"),
-                Color.CreateColor(ODL.Color.BLACK)
+                Color.CreateColor(odl.Color.BLACK)
             });
             Internal.SetGlobalVariable("$__mainvp__", MainViewport);
             Internal.SetGlobalVariable("$Peridot", Internal.QTrue);
             Internal.SetIVar(Module, "@brightness", Internal.LONG2NUM(255));
             Internal.SetIVar(Module, "@frame_count", Internal.LONG2NUM(0));
-            FrameRate = Config.FrameRate;
-            FPSTimer.Start();
+            int fps = Config.FrameRate;
+            if (Config.VSync)
+            {
+                SDL2.SDL.SDL_DisplayMode mode = new SDL2.SDL.SDL_DisplayMode();
+                SDL2.SDL.SDL_GetWindowDisplayMode(Program.MainWindow.SDL_Window, out mode);
+                fps = mode.refresh_rate;
+            }
+            Internal.SetIVar(Module, "@frame_rate", Internal.LONG2NUM(fps));
         }
 
         protected static IntPtr frame_rateget(IntPtr self, IntPtr _args)
@@ -192,18 +178,18 @@ namespace Peridot
             }
             else ScanArgs(1, Args);
 
-            ODL.Viewport vp = new ODL.Viewport(0, 0, (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")), (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height")));
+            odl.Viewport vp = new odl.Viewport(0, 0, (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")), (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height")));
             vp.Z = 999999999;
-            ODL.Sprite sp = new ODL.Sprite(vp);
+            odl.Sprite sp = new odl.Sprite(vp);
             sp.Z = 999999999;
             if (string.IsNullOrEmpty(Filename))
             {
-                sp.Bitmap = new ODL.Bitmap(vp.Width, vp.Height);
+                sp.Bitmap = new odl.Bitmap(vp.Width, vp.Height);
                 sp.Bitmap.Unlock();
-                sp.Bitmap.FillRect(0, 0, vp.Width, vp.Height, ODL.Color.BLACK);
+                sp.Bitmap.FillRect(0, 0, vp.Width, vp.Height, odl.Color.BLACK);
                 sp.Bitmap.Lock();
             }
-            else sp.Bitmap = new ODL.Bitmap(Filename);
+            else sp.Bitmap = new odl.Bitmap(Filename);
             sp.Opacity = 0;
             for (int i = 1; i <= Duration; i++)
             {
@@ -215,29 +201,28 @@ namespace Peridot
             return Internal.QTrue;
         }
 
+        protected static IntPtr screenshot(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            ScanArgs(0, Args);
+            return Bitmap.CreateBitmap(odl.Graphics.Windows[0].Screenshot());
+        }
+
         protected static IntPtr update(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(0, Args);
-            if (!ODL.Graphics.Initialized) Internal.rb_raise(Internal.rb_eSystemExit.Pointer, "game stopped");
+            if (!odl.Graphics.Initialized) Internal.rb_raise(Internal.rb_eSystemExit.Pointer, "game stopped");
 
-            FrameTimer.Start();
-
-            ODL.Graphics.UpdateInput();
-            ODL.Graphics.UpdateWindows();
+            odl.Graphics.UpdateInput();
+            odl.Graphics.UpdateWindows();
             try
             {
-                ODL.Graphics.UpdateGraphics(true);
+                odl.Graphics.UpdateGraphics(true);
             }
-            catch (ODL.BitmapLockedException)
+            catch (odl.BitmapLockedException)
             {
                 Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "attempted to render a still unlocked bitmap");
-            }
-
-            uint frameTicks = FrameTimer.Ticks;
-            if (frameTicks < TicksPerFrame)
-            {
-                SDL2.SDL.SDL_Delay((uint) (TicksPerFrame - frameTicks));
             }
             return Internal.QTrue;
         }
@@ -246,42 +231,8 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SDL2.SDL.SDL_Delay((uint) (TicksPerFrame * Internal.NUM2LONG(Args[0].Pointer)));
+            SDL2.SDL.SDL_Delay((uint) (1000d / Internal.NUM2LONG(Internal.GetIVar(self, "@frame_rate")) * Internal.NUM2LONG(Args[0].Pointer)));
             return Internal.QNil;
-        }
-    }
-
-    public class FPSTimer
-    {
-        uint StartTicks = 0;
-        uint PauseTicks = 0;
-        public bool Running = false;
-
-        public void Start()
-        {
-            this.Running = true;
-            StartTicks = SDL2.SDL.SDL_GetTicks() - PauseTicks;
-        }
-
-        public void Stop()
-        {
-            this.Running = false;
-            PauseTicks = SDL2.SDL.SDL_GetTicks() - StartTicks;
-        }
-
-        public uint Ticks
-        {
-            get
-            {
-                if (Running)
-                {
-                    return SDL2.SDL.SDL_GetTicks() - StartTicks;
-                }
-                else
-                {
-                    return PauseTicks;
-                }
-            }
         }
     }
 }

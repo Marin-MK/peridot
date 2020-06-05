@@ -27,9 +27,9 @@ namespace Peridot
             return c;
         }
 
-        public static ODL.Color CreateColor(IntPtr self)
+        public static odl.Color CreateColor(IntPtr self)
         {
-            return new ODL.Color(
+            return new odl.Color(
                 (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@red")),
                 (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@green")),
                 (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@blue")),
@@ -37,7 +37,7 @@ namespace Peridot
             );
         }
 
-        public static IntPtr CreateColor(ODL.Color Color)
+        public static IntPtr CreateColor(odl.Color Color)
         {
             return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {

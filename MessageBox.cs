@@ -7,13 +7,13 @@ namespace Peridot
 {
     public class MessageBox
     {
-        public ODL.Window Parent;
+        public odl.Window Parent;
         public string Title;
         public string Message;
         public int IconType;
         public List<string> Buttons;
 
-        public MessageBox(ODL.Window Parent, string Title, string Message, int IconType, List<string> Buttons)
+        public MessageBox(odl.Window Parent, string Title, string Message, int IconType, List<string> Buttons)
         {
             this.Parent = Parent;
             this.Title = Title;
@@ -49,7 +49,7 @@ namespace Peridot
 
     public class StandardBox : MessageBox
     {
-        public StandardBox(ODL.Window Parent, string Message)
+        public StandardBox(odl.Window Parent, string Message)
             : base(Parent, Parent == null ? "peridot" : Parent.Text, Message, 0, new List<string>() { "OK" })
         {
 
@@ -58,7 +58,7 @@ namespace Peridot
 
     public class InfoBox : MessageBox
     {
-        public InfoBox(ODL.Window Parent, string Message)
+        public InfoBox(odl.Window Parent, string Message)
             : base(Parent, "Info", Message, 1, new List<string>() { "OK" })
         {
 
@@ -67,7 +67,7 @@ namespace Peridot
 
     public class WarningBox : MessageBox
     {
-        public WarningBox(ODL.Window Parent, string Message)
+        public WarningBox(odl.Window Parent, string Message)
             : base(Parent, "Warning", Message, 2, new List<string>() { "OK" })
         {
 
@@ -76,7 +76,7 @@ namespace Peridot
 
     public class ErrorBox : MessageBox
     {
-        public ErrorBox(ODL.Window Parent, string Message)
+        public ErrorBox(odl.Window Parent, string Message)
             : base(Parent, "Error", Message, 3, new List<string>() { "OK" })
         {
 

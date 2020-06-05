@@ -17,6 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="irrKlang.NET4">
+      <HintPath>bin\x64\Debug\netcoreapp3.1\irrKlang.NET4.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>bin\x64\Debug\netcoreapp3.1\Newtonsoft.Json.dll</HintPath>
     </Reference>

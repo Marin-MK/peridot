@@ -8,7 +8,7 @@ namespace Peridot
     public class Sprite : RubyObject
     {
         public static IntPtr Class;
-        public static Dictionary<IntPtr, ODL.Sprite> SpriteDictionary = new Dictionary<IntPtr, ODL.Sprite>();
+        public static Dictionary<IntPtr, odl.Sprite> SpriteDictionary = new Dictionary<IntPtr, odl.Sprite>();
 
         public static Class CreateClass()
         {
@@ -42,6 +42,8 @@ namespace Peridot
             c.DefineMethod("src_rect=", src_rectset);
             c.DefineMethod("visible", visibleget);
             c.DefineMethod("visible=", visibleset);
+            c.DefineMethod("mirror", mirror_xget);
+            c.DefineMethod("mirror=", mirror_xset);
             c.DefineMethod("mirror_x", mirror_xget);
             c.DefineMethod("mirror_x=", mirror_xset);
             c.DefineMethod("mirror_y", mirror_yget);
@@ -82,26 +84,32 @@ namespace Peridot
             Internal.SetIVar(self, "@x", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@y", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@z", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@ox", Internal.LONG2NUM(0));
+            Internal.SetIVar(self, "@oy", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@opacity", Internal.LONG2NUM(255));
             Internal.SetIVar(self, "@angle", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@zoom_x", Internal.rb_float_new(1d));
             Internal.SetIVar(self, "@zoom_y", Internal.rb_float_new(1d));
-            IntPtr src_rect = Rect.CreateRect(new ODL.Rect(0, 0, 0, 0));
+            IntPtr src_rect = Rect.CreateRect(new odl.Rect(0, 0, 0, 0));
             Internal.SetIVar(self, "@src_rect", src_rect);
             Internal.SetIVar(src_rect, "@__sprite__", self);
             Internal.SetIVar(self, "@visible", Internal.QTrue);
             Internal.SetIVar(self, "@mirror_x", Internal.QFalse);
             Internal.SetIVar(self, "@mirror_y", Internal.QFalse);
-            IntPtr color = Color.CreateColor(ODL.Color.ALPHA);
+            IntPtr color = Color.CreateColor(odl.Color.ALPHA);
             Internal.SetIVar(self, "@color", color);
             Internal.SetIVar(color, "@__sprite__", self);
-            IntPtr tone = Tone.CreateTone(new ODL.Tone());
+            IntPtr tone = Tone.CreateTone(new odl.Tone());
             Internal.SetIVar(self, "@tone", tone);
             Internal.SetIVar(tone, "@__sprite__", self);
 
             if (!Viewport.ViewportDictionary.ContainsKey(viewport)) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "invalid viewport");
-            ODL.Sprite sprite = new ODL.Sprite(Viewport.ViewportDictionary[viewport]);
-            if (SpriteDictionary.ContainsKey(self)) dispose(self, IntPtr.Zero);
+            odl.Sprite sprite = new odl.Sprite(Viewport.ViewportDictionary[viewport]);
+            if (SpriteDictionary.ContainsKey(self))
+            {
+                SpriteDictionary[self].Dispose();
+                SpriteDictionary.Remove(self);
+            }
             SpriteDictionary.Add(self, sprite);
             return self;
         }
@@ -233,7 +241,7 @@ namespace Peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].OY = (int)Internal.NUM2LONG(Args[0].Pointer);
+            SpriteDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
             return Internal.SetIVar(self, "@oy", Args[0].Pointer);
         }
 
@@ -391,6 +399,7 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
+            SpriteDictionary[self].Color = Color.CreateColor(Args[0].Pointer);
             Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
             return Internal.SetIVar(self, "@color", Args[0].Pointer);
         }
@@ -409,6 +418,7 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
+            SpriteDictionary[self].Tone = Tone.CreateTone(Internal.GetIVar(self, "@tone"));
             Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
             return Internal.SetIVar(self, "@tone", Args[0].Pointer);
         }
@@ -430,7 +440,10 @@ namespace Peridot
                 ScanArgs(0, Args);
             }
             SpriteDictionary[self].Dispose();
-            foreach (KeyValuePair<IntPtr, ODL.Bitmap> kvp in Bitmap.BitmapDictionary)
+            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@__sprite__", Internal.QNil);
+            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
+            Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
+            foreach (KeyValuePair<IntPtr, odl.Bitmap> kvp in Bitmap.BitmapDictionary)
             {
                 if (kvp.Value == SpriteDictionary[self].Bitmap)
                 {

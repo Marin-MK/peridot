@@ -72,10 +72,10 @@ namespace Peridot
                 RubyArray Keys = new RubyArray(Args[0].Pointer);
                 for (int i = 0; i < Keys.Length; i++)
                 {
-                    if (ODL.Input.Trigger(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
+                    if (odl.Input.Trigger(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
                 }
             }
-            else if (ODL.Input.Trigger(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            else if (odl.Input.Trigger(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
             return Internal.QFalse;
         }
 
@@ -88,10 +88,10 @@ namespace Peridot
                 RubyArray Keys = new RubyArray(Args[0].Pointer);
                 for (int i = 0; i < Keys.Length; i++)
                 {
-                    if (ODL.Input.Press(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
+                    if (odl.Input.Press(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
                 }
             }
-            else if (ODL.Input.Press(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            else if (odl.Input.Press(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
             return Internal.QFalse;
         }
 

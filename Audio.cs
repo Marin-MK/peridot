@@ -21,12 +21,26 @@ namespace Peridot
         protected static IntPtr se_play(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[] { Internal.rb_cString.Pointer }) == Internal.QTrue)
+            {
+                string filename = new RubyString(Args[0].Pointer).ToString();
+                odl.Audio.Play(filename);
+            }
+            else
+            {
+                odl.Sound sound = Sound.SoundDictionary[Args[0].Pointer];
+                odl.Audio.Play(sound);
+            }
             return Internal.QTrue;
         }
 
         protected static IntPtr bgm_play(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
+            ScanArgs(1, Args);
+            string filename = new RubyString(Args[0].Pointer).ToString();
+            odl.Audio.Play(filename);
             return Internal.QTrue;
         }
     }

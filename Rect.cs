@@ -27,9 +27,9 @@ namespace Peridot
             return c;
         }
 
-        public static ODL.Rect CreateRect(IntPtr self)
+        public static odl.Rect CreateRect(IntPtr self)
         {
-            return new ODL.Rect(
+            return new odl.Rect(
                 (int) Internal.NUM2LONG(Internal.GetIVar(self, "@x")),
                 (int) Internal.NUM2LONG(Internal.GetIVar(self, "@y")),
                 (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")),
@@ -37,7 +37,7 @@ namespace Peridot
             );
         }
 
-        public static IntPtr CreateRect(ODL.Rect Rect)
+        public static IntPtr CreateRect(odl.Rect Rect)
         {
             return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {
@@ -48,7 +48,7 @@ namespace Peridot
             });
         }
 
-        public static IntPtr CreateRect(ODL.Size Size)
+        public static IntPtr CreateRect(odl.Size Size)
         {
             return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {
@@ -99,7 +99,13 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@x", Args[0].Pointer);
         }
 
@@ -115,7 +121,13 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@y", Args[0].Pointer);
         }
 
@@ -131,7 +143,13 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@width", Args[0].Pointer);
         }
 
@@ -147,7 +165,13 @@ namespace Peridot
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@height", Args[0].Pointer);
         }
 
@@ -169,6 +193,13 @@ namespace Peridot
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = y;
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = w;
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = h;
+            }
+            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            {
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].X = x;
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Y = y;
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Width = w;
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Height = h;
             }
             return self;
         }

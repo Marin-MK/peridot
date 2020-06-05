@@ -10,7 +10,7 @@ namespace Peridot
     public class Bitmap : RubyObject
     {
         public static IntPtr Class;
-        public static Dictionary<IntPtr, ODL.Bitmap> BitmapDictionary = new Dictionary<IntPtr, ODL.Bitmap>();
+        public static Dictionary<IntPtr, odl.Bitmap> BitmapDictionary = new Dictionary<IntPtr, odl.Bitmap>();
 
         public static Class CreateClass()
         {
@@ -32,12 +32,29 @@ namespace Peridot
             c.DefineMethod("draw_rect", draw_rect);
             c.DefineMethod("fill_rect", fill_rect);
             c.DefineMethod("blt", blt);
+            c.DefineMethod("stretch_blt", stretch_blt);
             c.DefineMethod("text_size", text_size);
             c.DefineMethod("draw_text", draw_text);
             c.DefineMethod("clear", clear);
             c.DefineMethod("dispose", dispose);
             c.DefineMethod("disposed?", disposed);
             return c;
+        }
+
+        public static IntPtr CreateBitmap(odl.Bitmap Bitmap)
+        {
+            IntPtr obj = allocate(Class);
+            Internal.SetIVar(obj, "@width", Internal.LONG2NUM(Bitmap.Width));
+            Internal.SetIVar(obj, "@height", Internal.LONG2NUM(Bitmap.Height));
+            Internal.SetIVar(obj, "@autolock", Internal.QTrue);
+            Internal.SetIVar(obj, "@font", Font.CreateFont());
+            if (BitmapDictionary.ContainsKey(obj))
+            {
+                BitmapDictionary[obj].Dispose();
+                BitmapDictionary.Remove(obj);
+            }
+            BitmapDictionary.Add(obj, Bitmap);
+            return obj;
         }
 
         protected static IntPtr allocate(IntPtr Class)
@@ -58,7 +75,7 @@ namespace Peridot
         {
             RubyArray Args = new RubyArray(_args);
 
-            ODL.Bitmap bmp = null;
+            odl.Bitmap bmp = null;
             if (Args.Length == 1)
             {
                 if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[1] { Class }) == Internal.QTrue)
@@ -67,12 +84,12 @@ namespace Peridot
                 }
                 else
                 {
-                    bmp = new ODL.Bitmap(new RubyString(Args[0].Pointer).ToString());
+                    bmp = new odl.Bitmap(new RubyString(Args[0].Pointer).ToString());
                 }
             }
             else if (Args.Length == 2)
             {
-                bmp = new ODL.Bitmap(
+                bmp = new odl.Bitmap(
                     (int) Internal.NUM2LONG(Args[0].Pointer),
                     (int) Internal.NUM2LONG(Args[1].Pointer)
                 );
@@ -83,7 +100,11 @@ namespace Peridot
             Internal.SetIVar(self, "@autolock", Internal.QTrue);
             Internal.SetIVar(self, "@font", Font.CreateFont());
 
-            if (BitmapDictionary.ContainsKey(self)) dispose(self, IntPtr.Zero);
+            if (BitmapDictionary.ContainsKey(self))
+            {
+                BitmapDictionary[self].Dispose();
+                BitmapDictionary.Remove(self);
+            }
             BitmapDictionary.Add(self, bmp);
             return self;
         }
@@ -218,7 +239,7 @@ namespace Peridot
                 x2 = (int) Internal.NUM2LONG(Args[2].Pointer),
                 y2 = (int) Internal.NUM2LONG(Args[3].Pointer);
             AutoUnlock(self);
-            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            odl.Color c = Color.CreateColor(Args[4].Pointer);
             BitmapDictionary[self].DrawLine(x1, y1, x2, y2, c);
             AutoLock(self);
             return Internal.QTrue;
@@ -234,7 +255,7 @@ namespace Peridot
                 w = (int) Internal.NUM2LONG(Args[2].Pointer),
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
             AutoUnlock(self);
-            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            odl.Color c = Color.CreateColor(Args[4].Pointer);
             BitmapDictionary[self].DrawRect(x, y, w, h, c);
             AutoLock(self);
             return Internal.QTrue;
@@ -250,7 +271,7 @@ namespace Peridot
                 w = (int) Internal.NUM2LONG(Args[2].Pointer),
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
             AutoUnlock(self);
-            ODL.Color c = Color.CreateColor(Args[4].Pointer);
+            odl.Color c = Color.CreateColor(Args[4].Pointer);
             BitmapDictionary[self].FillRect(x, y, w, h, c);
             AutoLock(self);
             return Internal.QTrue;
@@ -264,9 +285,44 @@ namespace Peridot
             int x = (int) Internal.NUM2LONG(Args[0].Pointer),
                 y = (int) Internal.NUM2LONG(Args[1].Pointer);
             AutoUnlock(self);
-            ODL.Bitmap srcbmp = BitmapDictionary[Args[2].Pointer];
-            ODL.Rect srcrect = Rect.CreateRect(Args[3].Pointer);
+            odl.Bitmap srcbmp = BitmapDictionary[Args[2].Pointer];
+            odl.Rect srcrect = Rect.CreateRect(Args[3].Pointer);
             BitmapDictionary[self].Build(x, y, srcbmp, srcrect);
+            AutoLock(self);
+            return Internal.QTrue;
+        }
+
+        protected static IntPtr stretch_blt(IntPtr self, IntPtr _args)
+        {
+            GuardDisposed(self);
+            RubyArray Args = new RubyArray(_args);
+            int x = 0; 
+            int y = 0;
+            int w = 0;
+            int h = 0;
+            odl.Bitmap srcbmp = null;
+            odl.Rect srcrect = null;
+            if (Args.Length == 3)
+            {
+                x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
+                y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
+                w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
+                h = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@height"));
+                srcbmp = BitmapDictionary[Args[1].Pointer];
+                srcrect = Rect.CreateRect(Args[2].Pointer);
+            }
+            else if (Args.Length == 6)
+            {
+                x = (int) Internal.NUM2LONG(Args[0].Pointer);
+                y = (int) Internal.NUM2LONG(Args[1].Pointer);
+                w = (int) Internal.NUM2LONG(Args[2].Pointer);
+                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+                srcbmp = BitmapDictionary[Args[4].Pointer];
+                srcrect = Rect.CreateRect(Args[5].Pointer);
+            }
+            else ScanArgs(6, Args);
+            AutoUnlock(self);
+            BitmapDictionary[self].Build(x, y, w, h, srcbmp, srcrect);
             AutoLock(self);
             return Internal.QTrue;
         }
@@ -296,26 +352,26 @@ namespace Peridot
             if (Args.Length == 6) align = (int) Internal.NUM2LONG(Args[5].Pointer);
             AutoUnlock(self);
             BitmapDictionary[self].Font = Font.CreateFont(Internal.GetIVar(self, "@font"));
-            ODL.Color color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@color"));
-            ODL.DrawOptions options = 0;
+            odl.Color color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@color"));
+            odl.DrawOptions options = 0;
             bool outline = false;
-            if (align == 0) options |= ODL.DrawOptions.LeftAlign;
-            else if (align == 1) options |= ODL.DrawOptions.CenterAlign;
-            else if (align == 2) options |= ODL.DrawOptions.RightAlign;
+            if (align == 0) options |= odl.DrawOptions.LeftAlign;
+            else if (align == 1) options |= odl.DrawOptions.CenterAlign;
+            else if (align == 2) options |= odl.DrawOptions.RightAlign;
             if (Internal.GetIVar(Internal.GetIVar(self, "@font"), "@outline") == Internal.QTrue) outline = true;
             if (outline)
             {
-                ODL.Color outline_color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@outline_color"));
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y - 1, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y - 1, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y - 1, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x - 1, y + 1, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y + 1, w, h), outline_color, options);
-                BitmapDictionary[self].DrawText(text, new ODL.Rect(x + 1, y + 1, w, h), outline_color, options);
+                odl.Color outline_color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@outline_color"));
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x - 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x + 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x - 1, y, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x + 1, y, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x - 1, y + 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x, y + 1, w, h), outline_color, options);
+                BitmapDictionary[self].DrawText(text, new odl.Rect(x + 1, y + 1, w, h), outline_color, options);
             }
-            BitmapDictionary[self].DrawText(text, new ODL.Rect(x, y, w, h), color, options);
+            BitmapDictionary[self].DrawText(text, new odl.Rect(x, y, w, h), color, options);
             SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[self].Texture, SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             AutoLock(self);
             return Internal.QTrue;

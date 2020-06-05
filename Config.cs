@@ -9,6 +9,7 @@ namespace Peridot
     public static class Config
     {
         public static int FrameRate = 60;
+        public static bool VSync = true;
         public static int WindowWidth = 480;
         public static int WindowHeight = 320;
         public static string WindowIcon = null;
@@ -17,7 +18,7 @@ namespace Peridot
         public static double WindowScale = 1d;
         public static bool MaintainAspectRatio = true;
         public static string Script = null;
-        public static ODL.Color BackgroundColor = ODL.Color.BLACK;
+        public static odl.Color BackgroundColor = odl.Color.BLACK;
         public static List<string> RubyLoadPath = new List<string>();
         public static string MainDirectory = null;
         public static bool FakeWin32API = false;
@@ -40,6 +41,8 @@ namespace Peridot
                     {
                         Program.Error($"An error occured while loading the config JSON. It is likely not a valid JSON format.\n\n{ex}");
                     }
+                    bool setfps = false;
+                    bool setvsync = false;
                     foreach (string key in data.Keys)
                     {
                         object value = data[key];
@@ -49,6 +52,12 @@ namespace Peridot
                                 EnsureType(typeof(long), value, key);
                                 FrameRate = Convert.ToInt32(value);
                                 if (FrameRate < 1) Program.Error($"The framerate specified by the config JSON must be at least 1.");
+                                setfps = true;
+                                break;
+                            case "vsync":
+                                EnsureType(typeof(bool), value, key);
+                                VSync = Convert.ToBoolean(value);
+                                setvsync = true;
                                 break;
                             case "window_width":
                                 EnsureType(typeof(long), value, key);
@@ -110,12 +119,16 @@ namespace Peridot
                                 break;
                         }
                     }
+                    if (setfps && setvsync && VSync)
+                    {
+                        Program.Error($"Cannot specify a frame rate and also have vsync enabled.");
+                    }
                     break;
                 }
             }
         }
 
-        public static ODL.Color ParseColor(Dictionary<string, object> data, string mainkey)
+        public static odl.Color ParseColor(Dictionary<string, object> data, string mainkey)
         {
             byte R = 0,
                  G = 0,
@@ -155,7 +168,7 @@ namespace Peridot
                         break;
                 }
             }
-            return new ODL.Color(R, G, B, A);
+            return new odl.Color(R, G, B, A);
         }
 
         public static void EnsureType(Type type, object value, string key)
