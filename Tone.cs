@@ -29,9 +29,9 @@ namespace Peridot
         public static odl.Tone CreateTone(IntPtr self)
         {
             return new odl.Tone(
-                (sbyte) Internal.NUM2LONG(Internal.GetIVar(self, "@red")),
-                (sbyte) Internal.NUM2LONG(Internal.GetIVar(self, "@green")),
-                (sbyte) Internal.NUM2LONG(Internal.GetIVar(self, "@blue")),
+                (short) Internal.NUM2LONG(Internal.GetIVar(self, "@red")),
+                (short) Internal.NUM2LONG(Internal.GetIVar(self, "@green")),
+                (short) Internal.NUM2LONG(Internal.GetIVar(self, "@blue")),
                 (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@grey"))
             );
         }
@@ -96,7 +96,7 @@ namespace Peridot
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Red = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Red = (short) Internal.NUM2LONG(Args[0].Pointer);
             }
             return Internal.SetIVar(self, "@red", Args[0].Pointer);
         }
@@ -114,7 +114,7 @@ namespace Peridot
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Green = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Green = (short) Internal.NUM2LONG(Args[0].Pointer);
             }
             return Internal.SetIVar(self, "@green", Args[0].Pointer);
         }
@@ -132,7 +132,7 @@ namespace Peridot
             ScanArgs(1, Args);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Blue = (sbyte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Tone.Blue = (short) Internal.NUM2LONG(Args[0].Pointer);
             }
             return Internal.SetIVar(self, "@blue", Args[0].Pointer);
         }
