@@ -35,7 +35,7 @@ namespace Peridot
 
         public static void Start()
         {
-            odl.Viewport.DefaultRenderer = odl.Graphics.Windows[0].Renderer;
+            odl.Viewport.DefaultWindow = Program.MainWindow;
             MainViewport = Internal.rb_funcallv(Viewport.Class, Internal.rb_intern("new"), 4, new IntPtr[4]
             {
                 Internal.LONG2NUM(0),
