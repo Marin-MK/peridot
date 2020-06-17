@@ -1,7 +1,7 @@
 ﻿using System;
 using RubyDotNET;
 
-namespace Peridot
+namespace peridot
 {
     public class Graphics : RubyObject
     {
@@ -78,7 +78,7 @@ namespace Peridot
                 Color.CreateColor(odl.Color.BLACK)
             });
             Internal.SetGlobalVariable("$__mainvp__", MainViewport);
-            Internal.SetGlobalVariable("$Peridot", Internal.QTrue);
+            Internal.SetGlobalVariable("$peridot", Internal.QTrue);
             Internal.SetIVar(Module, "@brightness", Internal.LONG2NUM(255));
             Internal.SetIVar(Module, "@frame_count", Internal.LONG2NUM(0));
             int fps = Config.FrameRate;

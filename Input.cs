@@ -4,7 +4,7 @@ using System.Text;
 using RubyDotNET;
 using static SDL2.SDL;
 
-namespace Peridot
+namespace peridot
 {
     public class Input : RubyObject
     {

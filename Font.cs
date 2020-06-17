@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using RubyDotNET;
 
-namespace Peridot
+namespace peridot
 {
     public class Font : RubyObject
     {

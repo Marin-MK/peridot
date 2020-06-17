@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using RubyDotNET;
 
-namespace Peridot
+namespace peridot
 {
     public class Bitmap : RubyObject
     {

@@ -4,7 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Peridot
+namespace peridot
 {
     public static class Config
     {
@@ -13,7 +13,7 @@ namespace Peridot
         public static int WindowWidth = 480;
         public static int WindowHeight = 320;
         public static string WindowIcon = null;
-        public static string WindowTitle = "Peridot";
+        public static string WindowTitle = "peridot";
         public static bool WindowResizable = true;
         public static double WindowScale = 1d;
         public static bool MaintainAspectRatio = true;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using static SDL2.SDL;
 
-namespace Peridot
+namespace peridot
 {
     public class MessageBox
     {

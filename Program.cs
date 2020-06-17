@@ -7,14 +7,43 @@ using odl;
 using RubyDotNET;
 using System.IO;
 
-namespace Peridot
+namespace peridot
 {
     public class Program
     {
         public static Window MainWindow;
-        public static bool Looping = true;
+        public int ViewportOffsetX = 0;
+        public int ViewportOffsetY = 0;
+        
+        public static void Start(string Path, bool InitializeEverything)
+        {
+            string OldWorkingDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(Path);
+            InitializeRubyClasses();
 
-        public static void Main(string[] args)
+            LoadConfig();
+
+            if (InitializeEverything) InitializeOdl();
+
+            ValidateEntryPoint();
+
+            if (InitializeEverything) InitializeWindow();
+
+            StartGraphics();
+
+            RunGame();
+
+            if (InitializeEverything) CloseWindow();
+            Directory.SetCurrentDirectory(OldWorkingDirectory);
+        }
+
+        public static void EmbedGame(Window EditorWindow, string Path)
+        {
+            MainWindow = EditorWindow;
+            Start(Path, false);
+        }
+
+        public static void InitializeRubyClasses()
         {
             try
             {
@@ -27,23 +56,29 @@ namespace Peridot
 
             try
             {
-                Graphics.CreateModule();
-                Input.CreateModule();
-                Audio.CreateModule();
-                Sound.CreateClass();
-                Viewport.CreateClass();
-                Sprite.CreateClass();
-                Bitmap.CreateClass();
-                Color.CreateClass();
-                Tone.CreateClass();
-                Rect.CreateClass();
-                Font.CreateClass();
+                if (Graphics.Module == IntPtr.Zero)
+                {
+                    Graphics.CreateModule();
+                    Input.CreateModule();
+                    Audio.CreateModule();
+                    Sound.CreateClass();
+                    Viewport.CreateClass();
+                    Sprite.CreateClass();
+                    Bitmap.CreateClass();
+                    Color.CreateClass();
+                    Tone.CreateClass();
+                    Rect.CreateClass();
+                    Font.CreateClass();
+                }
             }
             catch (Exception ex)
             {
                 Error($"Failed to create Ruby bindings.\n\n{ex}");
             }
+        }
 
+        public static void LoadConfig()
+        {
             string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             Config.LoadSettings(AssemblyName + ".json", AssemblyName + "-config.json", "peridot.json", "config.json", "game.json", "game-config.json");
 
@@ -74,22 +109,31 @@ namespace Peridot
                 Internal.GetKlass("Sprite").DefineMethod("blend_type", Win32API.blend_typeget);
                 Internal.GetKlass("Sprite").DefineMethod("blend_type=", Win32API.blend_typeset);
             }
+        }
 
+        public static void InitializeOdl()
+        {
             odl.Graphics.Start();
             odl.Audio.Start();
+        }
 
+        public static void ValidateEntryPoint()
+        {
             if (string.IsNullOrEmpty(Config.Script)) Error($"No starting script found (use the 'script' key in the configuration file).");
             else
             {
                 Config.Script = Path.GetFullPath(Config.Script);
                 if (!File.Exists(Config.Script)) Error($"Could not find starting script at '{Config.Script}'.");
             }
+        }
 
+        public static void InitializeWindow()
+        {
             MainWindow = new Window();
             MainWindow.Initialize(true, true);
             MainWindow.SetText(Config.WindowTitle);
             MainWindow.SetResizable(Config.WindowResizable);
-            MainWindow.SetSize((int) Math.Round(Width * Config.WindowScale), (int) Math.Round(Height * Config.WindowScale));
+            MainWindow.SetSize((int) Math.Round(Config.WindowWidth * Config.WindowScale), (int) Math.Round(Config.WindowHeight * Config.WindowScale));
             MainWindow.SetBackgroundColor(Config.BackgroundColor);
             if (!string.IsNullOrEmpty(Config.WindowIcon))
             {
@@ -97,7 +141,7 @@ namespace Peridot
                 MainWindow.SetIcon(Config.WindowIcon);
             }
             MainWindow.Show();
-            odl.Graphics.Update(); // Ensure the renderer updates to show the black background color while loading the game
+            odl.Graphics.Update(); // Ensure the renderer updates to show the specified background color while loading the game
             MainWindow.OnClosed += delegate (BaseEventArgs e)
             {
                 odl.Graphics.Stop();
@@ -125,9 +169,15 @@ namespace Peridot
                     if (MainWindow.Width != w || MainWindow.Height != h) MainWindow.SetSize(w, h);
                 }
             };
+        }
 
+        public static void StartGraphics()
+        {
             Graphics.Start();
+        }
 
+        public static void RunGame()
+        {
             // Sets extension load paths and working directory
             PrepareLoadPath();
 
@@ -142,8 +192,16 @@ namespace Peridot
 
             // Runs the script and returns raises a RuntimeError when window is closed.
             LoadScript(Config.Script);
+        }
 
+        public static void CloseWindow()
+        {
             if (!MainWindow.IsClosed) MainWindow.Close();
+        }
+
+        public static void Main(string[] args)
+        {
+            Start(Directory.GetCurrentDirectory(), true);
         }
 
         public static void Error(string Message)

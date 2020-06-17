@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using RubyDotNET;
 
-namespace Peridot
+namespace peridot
 {
     public class Sound : RubyObject
     {
