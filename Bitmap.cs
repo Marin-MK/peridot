@@ -18,6 +18,7 @@ namespace peridot
             Class = c.Pointer;
             c.DefineClassMethod("new", _new);
             c.DefineMethod("initialize", initialize);
+            c.DefineClassMethod("mask", mask);
             c.DefineMethod("width", widthget);
             c.DefineMethod("height", heightget);
             c.DefineMethod("font", fontget);
@@ -131,6 +132,43 @@ namespace peridot
                 return Internal.QTrue;
             }
             return Internal.QFalse;
+        }
+
+        protected static IntPtr mask(IntPtr self, IntPtr _args)
+        {
+            RubyArray Args = new RubyArray(_args);
+            odl.Bitmap result = null;
+            if (Args.Length == 2)
+            {
+                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
+                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
+                result = odl.Bitmap.Mask(maskbmp, srcbmp);
+            }
+            else if (Args.Length == 3)
+            {
+                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
+                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
+                odl.Rect srcrect = Rect.CreateRect(Args[2].Pointer);
+                result = odl.Bitmap.Mask(maskbmp, srcbmp, srcrect);
+            }
+            else if (Args.Length == 4)
+            {
+                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
+                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
+                int offsetx = (int) Internal.NUM2LONG(Args[2].Pointer);
+                int offsety = (int) Internal.NUM2LONG(Args[3].Pointer);
+                result = odl.Bitmap.Mask(maskbmp, srcbmp, offsetx, offsety);
+            }
+            else if (Args.Length == 5)
+            {
+                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
+                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
+                odl.Rect srcrect = Rect.CreateRect(Args[2].Pointer);
+                int offsetx = (int) Internal.NUM2LONG(Args[3].Pointer);
+                int offsety = (int) Internal.NUM2LONG(Args[4].Pointer);
+                result = odl.Bitmap.Mask(maskbmp, srcbmp, srcrect, offsetx, offsety);
+            }
+            return Bitmap.CreateBitmap(result);
         }
 
         protected static IntPtr widthget(IntPtr self, IntPtr _args)

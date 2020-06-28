@@ -19,20 +19,21 @@ namespace peridot
         {
             string OldWorkingDirectory = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(Path);
+            
             InitializeRubyClasses();
-
+            
             LoadConfig();
-
+            
             if (InitializeEverything) InitializeOdl();
-
+            
             ValidateEntryPoint();
-
+            
             if (InitializeEverything) InitializeWindow();
-
+            
             StartGraphics();
-
+            
             RunGame();
-
+            
             if (InitializeEverything) CloseWindow();
             Directory.SetCurrentDirectory(OldWorkingDirectory);
         }
