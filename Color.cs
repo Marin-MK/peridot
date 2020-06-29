@@ -70,10 +70,25 @@ namespace peridot
                    A = IntPtr.Zero;
             if (Args.Length == 3 || Args.Length == 4)
             {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
                 R = Args[0].Pointer;
+                if (Internal.NUM2LONG(R) < 0) R = Internal.LONG2NUM(0);
+                else if (Internal.NUM2LONG(R) > 255) R = Internal.LONG2NUM(255);
                 G = Args[1].Pointer;
+                if (Internal.NUM2LONG(G) < 0) G = Internal.LONG2NUM(0);
+                else if (Internal.NUM2LONG(G) > 255) G = Internal.LONG2NUM(255);
                 B = Args[2].Pointer;
-                if (Args.Length == 4) A = Args[3].Pointer;
+                if (Internal.NUM2LONG(B) < 0) B = Internal.LONG2NUM(0);
+                else if (Internal.NUM2LONG(B) > 255) B = Internal.LONG2NUM(255);
+                if (Args.Length == 4)
+                {
+                    Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                    A = Args[3].Pointer;
+                    if (Internal.NUM2LONG(A) < 0) A = Internal.LONG2NUM(0);
+                    else if (Internal.NUM2LONG(A) > 255) A = Internal.LONG2NUM(255);
+                }
                 else A = Internal.LONG2NUM(255);
             }
             else ScanArgs(3, Args);
@@ -84,7 +99,7 @@ namespace peridot
             return self;
         }
 
-        protected static IntPtr _load(IntPtr _self, IntPtr _args)//int argc, IntPtr[] argv, IntPtr self)
+        protected static IntPtr _load(IntPtr _self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
@@ -111,6 +126,9 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
+            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
                 Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
@@ -133,6 +151,9 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
+            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
                 Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
@@ -155,6 +176,9 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
+            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
                 Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
@@ -177,6 +201,9 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
+            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
                 Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);

@@ -147,6 +147,7 @@ namespace peridot
             {
                 odl.Graphics.Stop();
                 odl.Audio.Stop();
+                Environment.Exit(1);
             };
             MainWindow.Renderer.RenderScaleX = (float) Config.WindowScale;
             MainWindow.Renderer.RenderScaleY = (float) Config.WindowScale;
@@ -259,6 +260,7 @@ msg"); // Print error
                 Internal.rb_set_errinfo(Internal.QNil);
                 string text = new RubyString(msg).ToString();
                 new ErrorBox(MainWindow, text).Show();
+                Environment.Exit(1);
             }
         }
 

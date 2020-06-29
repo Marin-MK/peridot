@@ -76,6 +76,10 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(4, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
             IntPtr X = Args[0].Pointer;
             IntPtr Y = Args[1].Pointer;
             IntPtr Width = Args[2].Pointer;
@@ -98,6 +102,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = (int) Internal.NUM2LONG(Args[0].Pointer);
@@ -120,6 +125,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
@@ -142,6 +148,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
@@ -164,6 +171,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
                 Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
@@ -179,6 +187,10 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(4, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
             int x = (int) Internal.NUM2LONG(Args[0].Pointer);
             int y = (int) Internal.NUM2LONG(Args[1].Pointer);
             int w = (int) Internal.NUM2LONG(Args[2].Pointer);

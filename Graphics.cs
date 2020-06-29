@@ -102,6 +102,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(self, "@frame_rate", Args[0].Pointer);
         }
 
@@ -116,6 +117,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(self, "@width", Args[0].Pointer);
         }
 
@@ -130,6 +132,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(self, "@height", Args[0].Pointer);
         }
 
@@ -144,6 +147,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             Internal.rb_funcallv(OverlaySprite, Internal.rb_intern("opacity="), 1, new IntPtr[1] { Internal.LONG2NUM(255 - Internal.NUM2LONG(Args[0].Pointer)) });
             return Internal.SetIVar(self, "@brightness", Args[0].Pointer);
         }
@@ -159,6 +163,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(self, "@frame_count", Args[0].Pointer);
         }
 
@@ -231,6 +236,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             SDL2.SDL.SDL_Delay((uint) (1000d / Internal.NUM2LONG(Internal.GetIVar(self, "@frame_rate")) * Internal.NUM2LONG(Args[0].Pointer)));
             return Internal.QNil;
         }

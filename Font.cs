@@ -73,6 +73,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, RubyClass.String);
             return Internal.SetIVar(Class, "@default_folder", Args[0].Pointer);
         }
 
@@ -87,6 +88,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, RubyClass.String);
             return Internal.SetIVar(Class, "@default_name", Args[0].Pointer);
         }
 
@@ -101,6 +103,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(Class, "@default_size", Args[0].Pointer);
         }
 
@@ -115,6 +118,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             return Internal.SetIVar(Class, "@default_color", Args[0].Pointer);
         }
 
@@ -129,7 +133,8 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.SetIVar(Class, "@default_outline", Args[0].Pointer);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+            return Internal.SetIVar(Class, "@default_outline", Args[0].Pointer == Internal.QTrue ? Internal.QTrue : Internal.QFalse);
         }
 
         public static IntPtr default_outline_colorget(IntPtr self, IntPtr _args)
@@ -143,6 +148,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             return Internal.SetIVar(Class, "@default_outline_color", Args[0].Pointer);
         }
 
@@ -166,11 +172,14 @@ namespace peridot
                    Size = IntPtr.Zero;
             if (Args.Length == 2)
             {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.String);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
                 Name = Args[0].Pointer;
                 Size = Args[1].Pointer;
             }
             else if (Args.Length == 1)
             {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.String);
                 Name = Args[0].Pointer;
                 if (Internal.GetIVar(Class, "@default_size") == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "no default font size defined");
                 Size = Internal.GetIVar(Class, "@default_size");
@@ -204,6 +213,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.String);
             return Internal.SetIVar(self, "@name", Args[0].Pointer);
         }
 
@@ -218,6 +228,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
             return Internal.SetIVar(self, "@size", Args[0].Pointer);
         }
 
@@ -232,6 +243,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             return Internal.SetIVar(self, "@color", Args[0].Pointer);
         }
 
@@ -246,7 +258,8 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.SetIVar(self, "@outline", Args[0].Pointer);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil)) Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+            return Internal.SetIVar(self, "@outline", Args[0].Pointer == Internal.QTrue ? Internal.QTrue : Internal.QFalse);
         }
 
         protected static IntPtr outline_colorget(IntPtr self, IntPtr _args)
@@ -260,6 +273,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             return Internal.SetIVar(self, "@outline_color", Args[0].Pointer);
         }
     }

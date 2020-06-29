@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using RubyDotNET;
 
@@ -76,11 +77,17 @@ namespace peridot
             RubyArray Args = new RubyArray(_args);
             IntPtr viewport = IntPtr.Zero;
             if (Args.Length == 0 || Args.Length == 1 && Args[0].Pointer == Internal.QNil)
+            {
                 viewport = Internal.GetGlobalVariable("$__mainvp__");
+                Internal.SetIVar(self, "@viewport", Internal.QNil);
+            }
             else if (Args.Length == 1)
+            {
+                Internal.EnsureType(Args[0].Pointer, Viewport.Class, "Viewport");
                 viewport = Args[0].Pointer;
+                Internal.SetIVar(self, "@viewport", viewport);
+            }
             else ScanArgs(1, Args);
-            Internal.SetIVar(self, "@viewport", viewport);
             Internal.SetIVar(self, "@x", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@y", Internal.LONG2NUM(0));
             Internal.SetIVar(self, "@z", Internal.LONG2NUM(0));
@@ -127,7 +134,19 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.SetIVar(self, "@viewport", Args[0].Pointer);
+            IntPtr ptr = Internal.QNil;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                IntPtr global = Internal.GetGlobalVariable("$__mainvp__");
+                SpriteDictionary[self].Viewport = Viewport.ViewportDictionary[global];
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, Viewport.Class, "Viewport");
+                SpriteDictionary[self].Viewport = Viewport.ViewportDictionary[Args[0].Pointer];
+                ptr = Args[0].Pointer;
+            }
+            return Internal.SetIVar(self, "@viewport", ptr);
         }
 
         protected static IntPtr bitmapget(IntPtr self, IntPtr _args)
@@ -143,8 +162,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            if (Args[0].Pointer == Internal.QNil) SpriteDictionary[self].Bitmap = null;
-            else SpriteDictionary[self].Bitmap = Bitmap.BitmapDictionary[Args[0].Pointer];
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                SpriteDictionary[self].Bitmap = null;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                SpriteDictionary[self].Bitmap = Bitmap.BitmapDictionary[Args[0].Pointer];
+            }
             int x = 0,
                 y = 0,
                 w = SpriteDictionary[self].Bitmap == null ? 0 : SpriteDictionary[self].Bitmap.Width,
@@ -173,7 +199,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                SpriteDictionary[self].X = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                SpriteDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@x", Args[0].Pointer);
         }
 
@@ -190,7 +224,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                SpriteDictionary[self].Y = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                SpriteDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@y", Args[0].Pointer);
         }
 
@@ -207,7 +249,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                SpriteDictionary[self].Z = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                SpriteDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@z", Args[0].Pointer);
         }
 
@@ -224,7 +274,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                SpriteDictionary[self].OX = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                SpriteDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@ox", Args[0].Pointer);
         }
 
@@ -241,7 +299,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                SpriteDictionary[self].OY = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                SpriteDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@oy", Args[0].Pointer);
         }
 
@@ -258,6 +324,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
             SpriteDictionary[self].ZoomX = Internal.rb_num2dbl(Args[0].Pointer);
             return Internal.SetIVar(self, "@zoom_x", Args[0].Pointer);
         }
@@ -275,6 +342,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
             SpriteDictionary[self].ZoomY = Internal.rb_num2dbl(Args[0].Pointer);
             return Internal.SetIVar(self, "@zoom_y", Args[0].Pointer);
         }
@@ -292,7 +360,37 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].Opacity = (byte) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                int value = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                if (value < 0)
+                {
+                    value = 0;
+                    Args[0].Pointer = Internal.rb_float_new(0);
+                }
+                else if (value > 255)
+                {
+                    value = 255;
+                    Args[0].Pointer = Internal.rb_float_new(255);
+                }
+                SpriteDictionary[self].Opacity = (byte) value;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                int value = (int) Internal.NUM2LONG(Args[0].Pointer);
+                if (value < 0)
+                {
+                    value = 0;
+                    Args[0].Pointer = Internal.LONG2NUM(0);
+                }
+                else if (value > 255)
+                {
+                    value = 255;
+                    Args[0].Pointer = Internal.LONG2NUM(255);
+                }
+                SpriteDictionary[self].Opacity = (byte) value;
+            }
             return Internal.SetIVar(self, "@opacity", Args[0].Pointer);
         }
 
@@ -309,10 +407,18 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            int integer = (int) Internal.NUM2LONG(Args[0].Pointer) % 360;
-            IntPtr value = Internal.LONG2NUM(integer);
-            SpriteDictionary[self].Angle = integer;
-            return Internal.SetIVar(self, "@angle", value);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                int angle = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[self].Angle = angle % 360;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                int angle = (int) Internal.NUM2LONG(Args[0].Pointer);
+                SpriteDictionary[self].Angle = angle % 360;
+            }
+            return Internal.SetIVar(self, "@angle", Args[0].Pointer);
         }
 
         protected static IntPtr src_rectget(IntPtr self, IntPtr _args)
@@ -328,6 +434,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
             Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@__sprite__", Internal.QNil);
             SpriteDictionary[self].SrcRect = Rect.CreateRect(Args[0].Pointer);
             Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
@@ -347,7 +454,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].Visible = Args[0].Pointer == Internal.QTrue;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                SpriteDictionary[self].Visible = false;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+                SpriteDictionary[self].Visible = Args[0].Pointer == Internal.QTrue;
+            }
             return Internal.SetIVar(self, "@visible", Args[0].Pointer);
         }
 
@@ -364,7 +479,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].MirrorX = Args[0].Pointer == Internal.QTrue;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                SpriteDictionary[self].MirrorX = false;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+                SpriteDictionary[self].MirrorX = Args[0].Pointer == Internal.QTrue;
+            }
             return Internal.SetIVar(self, "@mirror_x", Args[0].Pointer);
         }
 
@@ -381,7 +504,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            SpriteDictionary[self].MirrorY = Args[0].Pointer == Internal.QTrue;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                SpriteDictionary[self].MirrorY = false;
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+                SpriteDictionary[self].MirrorY = Args[0].Pointer == Internal.QTrue;
+            }
             return Internal.SetIVar(self, "@mirror_y", Args[0].Pointer);
         }
 
@@ -398,6 +529,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
             SpriteDictionary[self].Color = Color.CreateColor(Args[0].Pointer);
             Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
@@ -417,6 +549,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Tone.Class, "Tone");
             Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
             SpriteDictionary[self].Tone = Tone.CreateTone(Internal.GetIVar(self, "@tone"));
             Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);

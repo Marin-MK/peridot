@@ -16,7 +16,6 @@ namespace peridot
             Module = m.Pointer;
             m.DefineClassMethod("trigger?", trigger);
             m.DefineClassMethod("press?", press);
-            m.DefineClassMethod("update", update);
             DefineButton(m, "A", SDL_Keycode.SDLK_a);
             DefineButton(m, "B", SDL_Keycode.SDLK_b);
             DefineButton(m, "C", SDL_Keycode.SDLK_c);
@@ -47,27 +46,70 @@ namespace peridot
             DefineButton(m, "LEFT", SDL_Keycode.SDLK_LEFT);
             DefineButton(m, "RIGHT", SDL_Keycode.SDLK_RIGHT);
             DefineButton(m, "UP", SDL_Keycode.SDLK_UP);
-            RubyArray shift = new RubyArray();
-            shift.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(SDL_Keycode.SDLK_LSHIFT))));
-            shift.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(SDL_Keycode.SDLK_RSHIFT))));
-            m.DefineConstant("SHIFT", shift.Pointer);
-            RubyArray ctrl = new RubyArray();
-            ctrl.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(SDL_Keycode.SDLK_LCTRL))));
-            ctrl.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(SDL_Keycode.SDLK_RCTRL))));
-            m.DefineConstant("CTRL", ctrl.Pointer);
+            DefineButton(m, "SHIFT", SDL_Keycode.SDLK_LSHIFT, SDL_Keycode.SDLK_RSHIFT);
+            DefineButton(m, "CTRL", SDL_Keycode.SDLK_LCTRL, SDL_Keycode.SDLK_RCTRL);
+            DefineButton(m, "ENTER", SDL_Keycode.SDLK_RETURN);
+            DefineButton(m, "RETURN", SDL_Keycode.SDLK_RETURN);
+            DefineButton(m, "ESCAPE", SDL_Keycode.SDLK_ESCAPE);
+            DefineButton(m, "F1", SDL_Keycode.SDLK_F1);
+            DefineButton(m, "F2", SDL_Keycode.SDLK_F2);
+            DefineButton(m, "F3", SDL_Keycode.SDLK_F3);
+            DefineButton(m, "F4", SDL_Keycode.SDLK_F4);
+            DefineButton(m, "F5", SDL_Keycode.SDLK_F5);
+            DefineButton(m, "F6", SDL_Keycode.SDLK_F6);
+            DefineButton(m, "F7", SDL_Keycode.SDLK_F7);
+            DefineButton(m, "F8", SDL_Keycode.SDLK_F8);
+            DefineButton(m, "F9", SDL_Keycode.SDLK_F9);
+            DefineButton(m, "F10", SDL_Keycode.SDLK_F10);
+            DefineButton(m, "F11", SDL_Keycode.SDLK_F11);
+            DefineButton(m, "F12", SDL_Keycode.SDLK_F12);
+            DefineButton(m, "F13", SDL_Keycode.SDLK_F13);
+            DefineButton(m, "F14", SDL_Keycode.SDLK_F14);
+            DefineButton(m, "F15", SDL_Keycode.SDLK_F15);
+            DefineButton(m, "F16", SDL_Keycode.SDLK_F16);
+            DefineButton(m, "F17", SDL_Keycode.SDLK_F17);
+            DefineButton(m, "F18", SDL_Keycode.SDLK_F18);
+            DefineButton(m, "F19", SDL_Keycode.SDLK_F19);
+            DefineButton(m, "F20", SDL_Keycode.SDLK_F20);
+            DefineButton(m, "F21", SDL_Keycode.SDLK_F21);
+            DefineButton(m, "F22", SDL_Keycode.SDLK_F22);
+            DefineButton(m, "F23", SDL_Keycode.SDLK_F23);
+            DefineButton(m, "F24", SDL_Keycode.SDLK_F24);
+            DefineButton(m, "HOME", SDL_Keycode.SDLK_HOME);
+            DefineButton(m, "END", SDL_Keycode.SDLK_END);
+            DefineButton(m, "PAGEUP", SDL_Keycode.SDLK_PAGEUP);
+            DefineButton(m, "PAGEDOWN", SDL_Keycode.SDLK_PAGEDOWN);
+            DefineButton(m, "INSERT", SDL_Keycode.SDLK_INSERT);
+            DefineButton(m, "DELETE", SDL_Keycode.SDLK_DELETE);
+            DefineButton(m, "BACKSPACE", SDL_Keycode.SDLK_BACKSPACE);
+            DefineButton(m, "SPACE", SDL_Keycode.SDLK_SPACE);
+            DefineButton(m, "TAB", SDL_Keycode.SDLK_TAB);
+            DefineButton(m, "CAPSLOCK", SDL_Keycode.SDLK_CAPSLOCK);
             return m;
         }
 
-        protected static void DefineButton(Module Module, string Name, SDL_Keycode keycode)
+        protected static void DefineButton(Module Module, string Name, params SDL_Keycode[] keycodes)
         {
-            Module.DefineConstant(Name, Internal.LONG2NUM(System.Convert.ToInt64(keycode)));
+            if (keycodes.Length == 1)
+            {
+                Module.DefineConstant(Name, Internal.LONG2NUM(System.Convert.ToInt64(keycodes[0])));
+            }
+            else
+            {
+                RubyArray ary = new RubyArray();
+                for (int i = 0; i < keycodes.Length; i++)
+                {
+                    ary.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(keycodes[i]))));
+                }
+                Module.DefineConstant(Name, ary.Pointer);
+            }
         }
 
         protected static IntPtr trigger(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[1] { Internal.rb_cArray.Pointer }) == Internal.QTrue)
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Array))
             {
                 RubyArray Keys = new RubyArray(Args[0].Pointer);
                 for (int i = 0; i < Keys.Length; i++)
@@ -75,7 +117,11 @@ namespace peridot
                     if (odl.Input.Trigger(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
                 }
             }
-            else if (odl.Input.Trigger(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (odl.Input.Trigger(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            }
             return Internal.QFalse;
         }
 
@@ -83,7 +129,7 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[1] { Internal.rb_cArray.Pointer }) == Internal.QTrue)
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Array))
             {
                 RubyArray Keys = new RubyArray(Args[0].Pointer);
                 for (int i = 0; i < Keys.Length; i++)
@@ -91,15 +137,12 @@ namespace peridot
                     if (odl.Input.Press(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
                 }
             }
-            else if (odl.Input.Press(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (odl.Input.Press(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+            }
             return Internal.QFalse;
-        }
-
-        protected static IntPtr update(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.QNil;
         }
     }
 }

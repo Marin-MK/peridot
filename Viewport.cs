@@ -62,6 +62,7 @@ namespace peridot
                 h = 0;
             if (Args.Length == 1)
             {
+                Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
                 x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
                 y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
                 w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
@@ -71,6 +72,10 @@ namespace peridot
             }
             else if (Args.Length == 4)
             {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
                 x = (int) Internal.NUM2LONG(Args[0].Pointer);
                 y = (int) Internal.NUM2LONG(Args[1].Pointer);
                 w = (int) Internal.NUM2LONG(Args[2].Pointer);
@@ -111,6 +116,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
             Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@__viewport__", Internal.QNil);
             ViewportDictionary[self].X = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
             ViewportDictionary[self].Y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
@@ -133,7 +139,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].X = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@x", Args[0].Pointer);
         }
 
@@ -150,7 +164,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].Y = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@y", Args[0].Pointer);
         }
 
@@ -167,7 +189,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].Width = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@width", Args[0].Pointer);
         }
 
@@ -184,7 +214,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].Height = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(Internal.GetIVar(self, "@rect"), "@height", Args[0].Pointer);
         }
 
@@ -201,7 +239,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].Z = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@z", Args[0].Pointer);
         }
 
@@ -218,6 +264,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
             Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__viewport__", Internal.QNil);
             ViewportDictionary[self].Color = Color.CreateColor(Args[0].Pointer);
             Internal.SetIVar(Args[0].Pointer, "@__viewport__", self);
@@ -237,7 +284,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].OX = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@ox", Args[0].Pointer);
         }
 
@@ -254,7 +309,15 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            ViewportDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                ViewportDictionary[self].OY = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                ViewportDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             return Internal.SetIVar(self, "@oy", Args[0].Pointer);
         }
 

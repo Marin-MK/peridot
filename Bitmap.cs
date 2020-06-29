@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
 using RubyDotNET;
@@ -33,7 +34,6 @@ namespace peridot
             c.DefineMethod("draw_rect", draw_rect);
             c.DefineMethod("fill_rect", fill_rect);
             c.DefineMethod("blt", blt);
-            c.DefineMethod("stretch_blt", stretch_blt);
             c.DefineMethod("text_size", text_size);
             c.DefineMethod("draw_text", draw_text);
             c.DefineMethod("clear", clear);
@@ -79,21 +79,39 @@ namespace peridot
             odl.Bitmap bmp = null;
             if (Args.Length == 1)
             {
-                if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[1] { Class }) == Internal.QTrue)
+                if (Internal.IsType(Args[0].Pointer, Bitmap.Class))
                 {
-                    bmp = Bitmap.BitmapDictionary[Args[0].Pointer];
+                    bmp = BitmapDictionary[Args[0].Pointer].Clone();
                 }
                 else
                 {
+                    Internal.EnsureType(Args[0].Pointer, RubyClass.String);
                     bmp = new odl.Bitmap(new RubyString(Args[0].Pointer).ToString());
                 }
             }
             else if (Args.Length == 2)
             {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
                 bmp = new odl.Bitmap(
                     (int) Internal.NUM2LONG(Args[0].Pointer),
                     (int) Internal.NUM2LONG(Args[1].Pointer)
                 );
+            }
+            else if (Args.Length == 3)
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Array);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                RubyArray pixelarray = new RubyArray(Args[0].Pointer);
+                byte[] bytearray = new byte[pixelarray.Length];
+                for (int i = 0; i < pixelarray.Length; i++)
+                {
+                    bytearray[i] = (byte) Internal.NUM2LONG(pixelarray[i].Pointer);
+                }
+                int width = (int) Internal.NUM2LONG(Args[1].Pointer);
+                int height = (int) Internal.NUM2LONG(Args[2].Pointer);
+                bmp = new odl.Bitmap(bytearray, width, height);
             }
             else ScanArgs(1, Args);
             Internal.SetIVar(self, "@width", Internal.LONG2NUM(bmp.Width));
@@ -140,12 +158,17 @@ namespace peridot
             odl.Bitmap result = null;
             if (Args.Length == 2)
             {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[1].Pointer, Bitmap.Class, "Bitmap");
                 odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
                 odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
                 result = odl.Bitmap.Mask(maskbmp, srcbmp);
             }
             else if (Args.Length == 3)
             {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[1].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[2].Pointer, Rect.Class, "Rect");
                 odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
                 odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
                 odl.Rect srcrect = Rect.CreateRect(Args[2].Pointer);
@@ -153,6 +176,10 @@ namespace peridot
             }
             else if (Args.Length == 4)
             {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[1].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
                 odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
                 odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
                 int offsetx = (int) Internal.NUM2LONG(Args[2].Pointer);
@@ -161,6 +188,11 @@ namespace peridot
             }
             else if (Args.Length == 5)
             {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[1].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[2].Pointer, Rect.Class, "Rect");
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[4].Pointer, RubyClass.Integer);
                 odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
                 odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
                 odl.Rect srcrect = Rect.CreateRect(Args[2].Pointer);
@@ -200,6 +232,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
+            Internal.EnsureType(Args[0].Pointer, Font.Class, "Font");
             return Internal.SetIVar(self, "@font", Args[0].Pointer);
         }
 
@@ -219,7 +252,11 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            return Internal.SetIVar(self, "@autolock", Args[0].Pointer);
+            if (!Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
+            }
+            return Internal.SetIVar(self, "@autolock", Args[0].Pointer == Internal.QTrue ? Internal.QTrue : Internal.QFalse);
         }
 
         protected static IntPtr unlockbmp(IntPtr self, IntPtr _args)
@@ -249,6 +286,8 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(2, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
             int X = (int) Internal.NUM2LONG(Args[0].Pointer),
                 Y = (int) Internal.NUM2LONG(Args[1].Pointer);
             return Color.CreateColor(BitmapDictionary[self].GetPixel(X, Y));
@@ -259,6 +298,9 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(3, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[2].Pointer, Color.Class, "Color");
             int X = (int) Internal.NUM2LONG(Args[0].Pointer),
                 Y = (int) Internal.NUM2LONG(Args[1].Pointer);
             AutoUnlock(self);
@@ -272,6 +314,11 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(5, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[4].Pointer, Color.Class, "Color");
             int x1 = (int) Internal.NUM2LONG(Args[0].Pointer),
                 y1 = (int) Internal.NUM2LONG(Args[1].Pointer),
                 x2 = (int) Internal.NUM2LONG(Args[2].Pointer),
@@ -287,13 +334,36 @@ namespace peridot
         {
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
-            ScanArgs(5, Args);
-            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
-                y = (int) Internal.NUM2LONG(Args[1].Pointer),
-                w = (int) Internal.NUM2LONG(Args[2].Pointer),
+            int x = 0,
+                y = 0,
+                w = 0,
+                h = 0;
+            odl.Color c = null;
+            if (Args.Length == 2)
+            {
+                Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
+                Internal.EnsureType(Args[1].Pointer, Color.Class, "Color");
+                x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
+                y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[1].Pointer, "@y"));
+                w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@width"));
+                h = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@height"));
+                c = Color.CreateColor(Args[1].Pointer);
+            }
+            else if (Args.Length == 5)
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[4].Pointer, Color.Class, "Color");
+                x = (int) Internal.NUM2LONG(Args[0].Pointer);
+                y = (int) Internal.NUM2LONG(Args[1].Pointer);
+                w = (int) Internal.NUM2LONG(Args[2].Pointer);
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
+                c = Color.CreateColor(Args[4].Pointer);
+            }
+            else ScanArgs(5, Args);
             AutoUnlock(self);
-            odl.Color c = Color.CreateColor(Args[4].Pointer);
             BitmapDictionary[self].DrawRect(x, y, w, h, c);
             AutoLock(self);
             return Internal.QTrue;
@@ -303,13 +373,36 @@ namespace peridot
         {
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
-            ScanArgs(5, Args);
-            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
-                y = (int) Internal.NUM2LONG(Args[1].Pointer),
-                w = (int) Internal.NUM2LONG(Args[2].Pointer),
+            int x = 0,
+                y = 0,
+                w = 0,
+                h = 0;
+            odl.Color c = null;
+            if (Args.Length == 2)
+            {
+                Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
+                Internal.EnsureType(Args[1].Pointer, Color.Class, "Color");
+                x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
+                y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[1].Pointer, "@y"));
+                w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@width"));
+                h = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@height"));
+                c = Color.CreateColor(Args[1].Pointer);
+            }
+            else if (Args.Length == 5)
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[4].Pointer, Color.Class, "Color");
+                x = (int) Internal.NUM2LONG(Args[0].Pointer);
+                y = (int) Internal.NUM2LONG(Args[1].Pointer);
+                w = (int) Internal.NUM2LONG(Args[2].Pointer);
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
+                c = Color.CreateColor(Args[4].Pointer);
+            }
+            else ScanArgs(5, Args);
             AutoUnlock(self);
-            odl.Color c = Color.CreateColor(Args[4].Pointer);
             BitmapDictionary[self].FillRect(x, y, w, h, c);
             AutoLock(self);
             return Internal.QTrue;
@@ -319,48 +412,97 @@ namespace peridot
         {
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
-            ScanArgs(4, Args);
-            int x = (int) Internal.NUM2LONG(Args[0].Pointer),
-                y = (int) Internal.NUM2LONG(Args[1].Pointer);
-            AutoUnlock(self);
-            odl.Bitmap srcbmp = BitmapDictionary[Args[2].Pointer];
-            odl.Rect srcrect = Rect.CreateRect(Args[3].Pointer);
-            BitmapDictionary[self].Build(x, y, srcbmp, srcrect);
-            AutoLock(self);
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr stretch_blt(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            int x = 0; 
-            int y = 0;
-            int w = 0;
-            int h = 0;
+            int dx = 0,
+                dy = 0,
+                dw = 0,
+                dh = 0;
             odl.Bitmap srcbmp = null;
-            odl.Rect srcrect = null;
-            if (Args.Length == 3)
+            int sx = 0,
+                sy = 0,
+                sw = 0,
+                sh = 0;
+            if (Args.Length == 4) // x, y, bmp, srcrect
             {
-                x = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
-                y = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
-                w = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
-                h = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@height"));
-                srcbmp = BitmapDictionary[Args[1].Pointer];
-                srcrect = Rect.CreateRect(Args[2].Pointer);
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[3].Pointer, Rect.Class, "Rect");
+                dx = (int) Internal.NUM2LONG(Args[0].Pointer);
+                dy = (int) Internal.NUM2LONG(Args[1].Pointer);
+                srcbmp = BitmapDictionary[Args[2].Pointer];
+                sx = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@x"));
+                sy = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@y"));
+                sw = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@width"));
+                sh = (int) Internal.NUM2LONG(Internal.GetIVar(Args[3].Pointer, "@height"));
+                dw = sw;
+                dh = sh;
             }
-            else if (Args.Length == 6)
+            else if (Args.Length == 6) // x, y, w, h, bmp, srcrect
             {
-                x = (int) Internal.NUM2LONG(Args[0].Pointer);
-                y = (int) Internal.NUM2LONG(Args[1].Pointer);
-                w = (int) Internal.NUM2LONG(Args[2].Pointer);
-                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[4].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[5].Pointer, Rect.Class, "Rect");
+                dx = (int) Internal.NUM2LONG(Args[0].Pointer);
+                dy = (int) Internal.NUM2LONG(Args[1].Pointer);
+                dw = (int) Internal.NUM2LONG(Args[2].Pointer);
+                dh = (int) Internal.NUM2LONG(Args[3].Pointer);
                 srcbmp = BitmapDictionary[Args[4].Pointer];
-                srcrect = Rect.CreateRect(Args[5].Pointer);
+                sx = (int) Internal.NUM2LONG(Internal.GetIVar(Args[5].Pointer, "@x"));
+                sy = (int) Internal.NUM2LONG(Internal.GetIVar(Args[5].Pointer, "@y"));
+                sw = (int) Internal.NUM2LONG(Internal.GetIVar(Args[5].Pointer, "@width"));
+                sh = (int) Internal.NUM2LONG(Internal.GetIVar(Args[5].Pointer, "@height"));
             }
-            else ScanArgs(6, Args);
+            else if (Args.Length == 9) // dx, dy, dw, dh, bmp, sx, sy, sw, sh
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[4].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[5].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[6].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[7].Pointer, RubyClass.Integer);
+                Internal.EnsureType(Args[8].Pointer, RubyClass.Integer);
+                dx = (int) Internal.NUM2LONG(Args[0].Pointer);
+                dy = (int) Internal.NUM2LONG(Args[1].Pointer);
+                dw = (int) Internal.NUM2LONG(Args[2].Pointer);
+                dh = (int) Internal.NUM2LONG(Args[3].Pointer);
+                srcbmp = BitmapDictionary[Args[4].Pointer];
+                sx = (int) Internal.NUM2LONG(Args[5].Pointer);
+                sy = (int) Internal.NUM2LONG(Args[6].Pointer);
+                sw = (int) Internal.NUM2LONG(Args[7].Pointer);
+                sh = (int) Internal.NUM2LONG(Args[8].Pointer);
+            }
+            else if (Args.Length == 3) // destrect, bmp, srcrect
+            {
+                Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
+                Internal.EnsureType(Args[1].Pointer, Bitmap.Class, "Bitmap");
+                Internal.EnsureType(Args[2].Pointer, Rect.Class, "Rect");
+                dx = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@x"));
+                dy = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@y"));
+                dw = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@width"));
+                dh = (int) Internal.NUM2LONG(Internal.GetIVar(Args[0].Pointer, "@height"));
+                srcbmp = BitmapDictionary[Args[1].Pointer];
+                sx = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@x"));
+                sy = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@y"));
+                sw = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@width"));
+                sh = (int) Internal.NUM2LONG(Internal.GetIVar(Args[2].Pointer, "@height"));
+            }
+            else if (Args.Length == 1) // bmp
+            {
+                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
+                srcbmp = BitmapDictionary[Args[0].Pointer];
+                dw = srcbmp.Width;
+                dh = srcbmp.Height;
+                sw = srcbmp.Width;
+                sh = srcbmp.Height;
+            }
+            else ScanArgs(4, Args);
             AutoUnlock(self);
-            BitmapDictionary[self].Build(x, y, w, h, srcbmp, srcrect);
+            BitmapDictionary[self].Build(dx, dy, dw, dh, srcbmp, sx, sy, sw, sh);
             AutoLock(self);
             return Internal.QTrue;
         }
@@ -370,7 +512,7 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            if (Args[0].Pointer == Internal.QNil) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "nil in text_size");
+            Internal.EnsureType(Args[0].Pointer, RubyClass.String);
             string text = new RubyString(Args[0].Pointer).ToString();
             BitmapDictionary[self].Font = Font.CreateFont(Internal.GetIVar(self, "@font"));
             return Rect.CreateRect(BitmapDictionary[self].TextSize(text));
@@ -381,13 +523,22 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             if (Args.Length != 5 && Args.Length != 6) ScanArgs(6, Args);
+            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+            Internal.EnsureType(Args[4].Pointer, RubyClass.String);
             int x = (int) Internal.NUM2LONG(Args[0].Pointer),
                 y = (int) Internal.NUM2LONG(Args[1].Pointer),
                 w = (int) Internal.NUM2LONG(Args[2].Pointer),
                 h = (int) Internal.NUM2LONG(Args[3].Pointer);
             string text = new RubyString(Args[4].Pointer).ToString();
             int align = 0;
-            if (Args.Length == 6) align = (int) Internal.NUM2LONG(Args[5].Pointer);
+            if (Args.Length == 6)
+            {
+                Internal.EnsureType(Args[5].Pointer, RubyClass.Integer);
+                align = (int) Internal.NUM2LONG(Args[5].Pointer);
+            }
             AutoUnlock(self);
             BitmapDictionary[self].Font = Font.CreateFont(Internal.GetIVar(self, "@font"));
             odl.Color color = Color.CreateColor(Internal.GetIVar(Internal.GetIVar(self, "@font"), "@color"));
