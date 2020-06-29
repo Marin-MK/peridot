@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using RubyDotNET;
 
 namespace peridot
@@ -38,7 +36,6 @@ namespace peridot
             }
             else
             {
-                Internal.EnsureType(Internal.GetIVar(self, "@red"), RubyClass.Integer);
                 R = (short) Internal.NUM2LONG(Internal.GetIVar(self, "@red"));
             }
             if (Internal.IsType(Internal.GetIVar(self, "@green"), RubyClass.Float))
@@ -47,7 +44,6 @@ namespace peridot
             }
             else
             {
-                Internal.EnsureType(Internal.GetIVar(self, "@green"), RubyClass.Integer);
                 G = (short) Internal.NUM2LONG(Internal.GetIVar(self, "@green"));
             }
             if (Internal.IsType(Internal.GetIVar(self, "@blue"), RubyClass.Float))
@@ -56,17 +52,15 @@ namespace peridot
             }
             else
             {
-                Internal.EnsureType(Internal.GetIVar(self, "@blue"), RubyClass.Integer);
                 B = (short) Internal.NUM2LONG(Internal.GetIVar(self, "@blue"));
             }
-            if (Internal.IsType(Internal.GetIVar(self, "@alpha"), RubyClass.Float))
+            if (Internal.IsType(Internal.GetIVar(self, "@grey"), RubyClass.Float))
             {
-                Grey = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@alpha")));
+                Grey = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@grey")));
             }
             else
             {
-                Internal.EnsureType(Internal.GetIVar(self, "@alpha"), RubyClass.Integer);
-                Grey = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@alpha"));
+                Grey = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@grey"));
             }
             return new odl.Tone(R, G, B, Grey);
         }

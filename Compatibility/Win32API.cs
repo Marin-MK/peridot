@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using RubyDotNET;
 
 namespace peridot
@@ -68,6 +66,10 @@ namespace peridot
                     Array[3] = new RubyInt(Program.MainWindow.Height);
                     return Array.Pointer;
                 }
+                else if (function == "SetWindowPos")
+                {
+                    return Internal.QTrue;
+                }
                 else if (function == "FindWindowEx")
                 {
                     if (Args.Length >= 3 && new RubyString(Args[2].Pointer).ToString() == "RGSS Player") return Internal.LONG2NUM(1337);
@@ -75,7 +77,7 @@ namespace peridot
                 }
                 else if (function == "GetWindowThreadProcessId")
                 {
-                    if (Args.Length >= 2 && (int) Internal.NUM2LONG(Args[0].Pointer) == 1337)
+                    if (Args.Length >= 2 && (int)Internal.NUM2LONG(Args[0].Pointer) == 1337)
                         return Internal.LONG2NUM(System.Threading.Thread.CurrentThread.ManagedThreadId);
                     else return Internal.LONG2NUM(0);
                 }
@@ -92,6 +94,29 @@ namespace peridot
                 else if (function == "GetCurrentThreadId") return Internal.LONG2NUM(System.Threading.Thread.CurrentThread.ManagedThreadId);
                 else if (function == "GetCurrentProcess") return nil;
                 else if (function == "SetPriorityClass") return nil;
+                else
+                {
+                    Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, $"fake win32api has no implementation for '{function}' in '{library}'");
+                }
+            }
+            else if (library == "shell32" || library == "Shell32" || library == "shell32.dll" || library == "Shell32.dll")
+            {
+                if (function == "SHGetKnownFolderPath")
+                {
+                    //return new RubyString("C:\\Users\\Eigenaar\\Saved Games").Pointer;
+                    return new RubyString(System.IO.Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Saved Games")).Pointer;
+                }
+                else
+                {
+                    Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, $"fake win32api has no implementation for '{function}' in '{library}'");
+                }
+            }
+            else if (library == "ole32" || library == "ole32.dll" || library == "Ole32" || library == "Ole32.dll")
+            {
+                if (function == "CoTaskMemFree")
+                {
+                    return Internal.QNil;
+                }
                 else
                 {
                     Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, $"fake win32api has no implementation for '{function}' in '{library}'");

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using odl;
 using RubyDotNET;
@@ -259,8 +257,7 @@ msg"); // Print error
                 Internal.rb_gv_set("$x", Internal.QNil);
                 Internal.rb_set_errinfo(Internal.QNil);
                 string text = new RubyString(msg).ToString();
-                new ErrorBox(MainWindow, text).Show();
-                Environment.Exit(1);
+                Error(text);
             }
         }
 

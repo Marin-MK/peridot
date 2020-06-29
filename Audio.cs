@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using RubyDotNET;
 
 namespace peridot
@@ -38,7 +36,7 @@ namespace peridot
         protected static IntPtr bgm_play(IntPtr self, IntPtr _args)
         {
             RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
+            if (!Config.FakeWin32API) ScanArgs(1, Args);
             string filename = new RubyString(Args[0].Pointer).ToString();
             odl.Audio.Play(filename);
             return Internal.QTrue;
