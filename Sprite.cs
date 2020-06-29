@@ -324,8 +324,18 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
-            SpriteDictionary[self].ZoomX = Internal.rb_num2dbl(Args[0].Pointer);
+            double zoomx = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Integer))
+            {
+                zoomx = Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(zoomx);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
+                zoomx = Internal.rb_num2dbl(Args[0].Pointer);
+            }
+            SpriteDictionary[self].ZoomX = zoomx;
             return Internal.SetIVar(self, "@zoom_x", Args[0].Pointer);
         }
 
@@ -342,8 +352,18 @@ namespace peridot
             GuardDisposed(self);
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
-            SpriteDictionary[self].ZoomY = Internal.rb_num2dbl(Args[0].Pointer);
+            double zoomy = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Integer))
+            {
+                zoomy = Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(zoomy);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
+                zoomy = Internal.rb_num2dbl(Args[0].Pointer);
+            }
+            SpriteDictionary[self].ZoomY = zoomy;
             return Internal.SetIVar(self, "@zoom_y", Args[0].Pointer);
         }
 

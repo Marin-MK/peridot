@@ -29,12 +29,47 @@ namespace peridot
 
         public static odl.Rect CreateRect(IntPtr self)
         {
-            return new odl.Rect(
-                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@x")),
-                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@y")),
-                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width")),
-                (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height"))
-            );
+            int x = 0,
+                y = 0,
+                w = 0,
+                h = 0;
+            if (Internal.IsType(Internal.GetIVar(self, "@x"), RubyClass.Float))
+            {
+                x = (int) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@x")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@x"), RubyClass.Integer);
+                x = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@x"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@y"), RubyClass.Float))
+            {
+                y = (int) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@y")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@y"), RubyClass.Integer);
+                y = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@y"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@width"), RubyClass.Float))
+            {
+                w = (int) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@width")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@width"), RubyClass.Integer);
+                w = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@width"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@height"), RubyClass.Float))
+            {
+                h = (int) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@height")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@height"), RubyClass.Integer);
+                h = (int) Internal.NUM2LONG(Internal.GetIVar(self, "@height"));
+            }
+            return new odl.Rect(x, y, w, h);
         }
 
         public static IntPtr CreateRect(odl.Rect Rect)
@@ -102,14 +137,23 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            int x = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                x = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                x = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.X = x;
             }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].X = x;
             }
             return Internal.SetIVar(self, "@x", Args[0].Pointer);
         }
@@ -125,14 +169,23 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            int y = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                y = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                y = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Y = y;
             }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Y = y;
             }
             return Internal.SetIVar(self, "@y", Args[0].Pointer);
         }
@@ -148,14 +201,23 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            int w = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                w = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                w = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Width = w;
             }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Width = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Width = w;
             }
             return Internal.SetIVar(self, "@width", Args[0].Pointer);
         }
@@ -171,14 +233,23 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+            int h = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                h = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                h = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].SrcRect.Height = h;
             }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Height = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Height = h;
             }
             return Internal.SetIVar(self, "@height", Args[0].Pointer);
         }
@@ -187,14 +258,46 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(4, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-            Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
-            Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
-            Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
-            int x = (int) Internal.NUM2LONG(Args[0].Pointer);
-            int y = (int) Internal.NUM2LONG(Args[1].Pointer);
-            int w = (int) Internal.NUM2LONG(Args[2].Pointer);
-            int h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            int x = 0,
+                y = 0,
+                w = 0,
+                h = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                x = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                x = (int) Internal.NUM2LONG(Args[0].Pointer);
+            }
+            if (Internal.IsType(Args[1].Pointer, RubyClass.Float))
+            {
+                y = (int) Math.Round(Internal.rb_num2dbl(Args[1].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                y = (int) Internal.NUM2LONG(Args[1].Pointer);
+            }
+            if (Internal.IsType(Args[2].Pointer, RubyClass.Float))
+            {
+                w = (int) Math.Round(Internal.rb_num2dbl(Args[2].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                w = (int) Internal.NUM2LONG(Args[2].Pointer);
+            }
+            if (Internal.IsType(Args[3].Pointer, RubyClass.Float))
+            {
+                h = (int) Math.Round(Internal.rb_num2dbl(Args[3].Pointer));
+            }
+            else
+            {
+                Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                h = (int) Internal.NUM2LONG(Args[3].Pointer);
+            }
             Internal.SetIVar(self, "@x", Args[0].Pointer);
             Internal.SetIVar(self, "@y", Args[1].Pointer);
             Internal.SetIVar(self, "@width", Args[2].Pointer);

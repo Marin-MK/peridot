@@ -29,12 +29,47 @@ namespace peridot
 
         public static odl.Color CreateColor(IntPtr self)
         {
-            return new odl.Color(
-                (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@red")),
-                (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@green")),
-                (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@blue")),
-                (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@alpha"))
-            );
+            byte R = 0,
+                 G = 0,
+                 B = 0,
+                 A = 0;
+            if (Internal.IsType(Internal.GetIVar(self, "@red"), RubyClass.Float))
+            {
+                R = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@red")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@red"), RubyClass.Integer);
+                R = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@red"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@green"), RubyClass.Float))
+            {
+                G = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@green")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@green"), RubyClass.Integer);
+                G = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@green"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@blue"), RubyClass.Float))
+            {
+                B = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@blue")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@blue"), RubyClass.Integer);
+                B = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@blue"));
+            }
+            if (Internal.IsType(Internal.GetIVar(self, "@alpha"), RubyClass.Float))
+            {
+                A = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@alpha")));
+            }
+            else
+            {
+                Internal.EnsureType(Internal.GetIVar(self, "@alpha"), RubyClass.Integer);
+                A = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@alpha"));
+            }
+            return new odl.Color(R, G, B, A);
         }
 
         public static IntPtr CreateColor(odl.Color Color)
@@ -70,24 +105,60 @@ namespace peridot
                    A = IntPtr.Zero;
             if (Args.Length == 3 || Args.Length == 4)
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
-                Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
-                R = Args[0].Pointer;
-                if (Internal.NUM2LONG(R) < 0) R = Internal.LONG2NUM(0);
-                else if (Internal.NUM2LONG(R) > 255) R = Internal.LONG2NUM(255);
-                G = Args[1].Pointer;
-                if (Internal.NUM2LONG(G) < 0) G = Internal.LONG2NUM(0);
-                else if (Internal.NUM2LONG(G) > 255) G = Internal.LONG2NUM(255);
-                B = Args[2].Pointer;
-                if (Internal.NUM2LONG(B) < 0) B = Internal.LONG2NUM(0);
-                else if (Internal.NUM2LONG(B) > 255) B = Internal.LONG2NUM(255);
+                if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+                {
+                    if (Internal.rb_num2dbl(Args[0].Pointer) < 0) R = Internal.rb_float_new(0);
+                    else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) R = Internal.rb_float_new(255);
+                    else R = Args[0].Pointer;
+                }
+                else
+                {
+                    Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                    if (Internal.NUM2LONG(Args[0].Pointer) < 0) R = Internal.LONG2NUM(0);
+                    else if (Internal.NUM2LONG(Args[0].Pointer) > 255) R = Internal.LONG2NUM(255);
+                    else R = Args[0].Pointer;
+                }
+                if (Internal.IsType(Args[1].Pointer, RubyClass.Float))
+                {
+                    if (Internal.rb_num2dbl(Args[1].Pointer) < 0) G = Internal.rb_float_new(0);
+                    else if (Internal.rb_num2dbl(Args[1].Pointer) > 255) G = Internal.rb_float_new(255);
+                    else G = Args[1].Pointer;
+                }
+                else
+                {
+                    Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
+                    if (Internal.NUM2LONG(Args[1].Pointer) < 0) G = Internal.LONG2NUM(0);
+                    else if (Internal.NUM2LONG(Args[1].Pointer) > 255) G = Internal.LONG2NUM(255);
+                    else G = Args[1].Pointer;
+                }
+                if (Internal.IsType(Args[2].Pointer, RubyClass.Float))
+                {
+                    if (Internal.rb_num2dbl(Args[2].Pointer) < 0) B = Internal.rb_float_new(0);
+                    else if (Internal.rb_num2dbl(Args[2].Pointer) > 255) B = Internal.rb_float_new(255);
+                    else B = Args[2].Pointer;
+                }
+                else
+                {
+                    Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
+                    if (Internal.NUM2LONG(Args[2].Pointer) < 0) B = Internal.LONG2NUM(0);
+                    else if (Internal.NUM2LONG(Args[2].Pointer) > 255) B = Internal.LONG2NUM(255);
+                    else B = Args[2].Pointer;
+                }
                 if (Args.Length == 4)
                 {
-                    Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
-                    A = Args[3].Pointer;
-                    if (Internal.NUM2LONG(A) < 0) A = Internal.LONG2NUM(0);
-                    else if (Internal.NUM2LONG(A) > 255) A = Internal.LONG2NUM(255);
+                    if (Internal.IsType(Args[3].Pointer, RubyClass.Float))
+                    {
+                        if (Internal.rb_num2dbl(Args[3].Pointer) < 0) A = Internal.rb_float_new(0);
+                        else if (Internal.rb_num2dbl(Args[3].Pointer) > 255) A = Internal.rb_float_new(255);
+                        else A = Args[3].Pointer;
+                    }
+                    else
+                    {
+                        Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
+                        if (Internal.NUM2LONG(Args[3].Pointer) < 0) A = Internal.LONG2NUM(0);
+                        else if (Internal.NUM2LONG(Args[3].Pointer) > 255) A = Internal.LONG2NUM(255);
+                        else A = Args[3].Pointer;
+                    }
                 }
                 else A = Internal.LONG2NUM(255);
             }
@@ -126,16 +197,29 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
-            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
+            byte R = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) R = 0;
+                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) R = 255;
+                else R = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(R);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (Internal.NUM2LONG(Args[0].Pointer) < 0) R = 0;
+                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) R = 255;
+                else R = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.LONG2NUM(R);
+            }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Red = R;
             }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Red = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Red = R;
             }
             return Internal.SetIVar(self, "@red", Args[0].Pointer);
         }
@@ -151,16 +235,29 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
-            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
+            byte G = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) G = 0;
+                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) G = 255;
+                else G = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(G);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (Internal.NUM2LONG(Args[0].Pointer) < 0) G = 0;
+                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) G = 255;
+                else G = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.LONG2NUM(G);
+            }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Green = G;
             }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Green = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Green = G;
             }
             return Internal.SetIVar(self, "@green", Args[0].Pointer);
         }
@@ -176,16 +273,29 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
-            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
+            byte B = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) B = 0;
+                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) B = 255;
+                else B = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(B);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (Internal.NUM2LONG(Args[0].Pointer) < 0) B = 0;
+                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) B = 255;
+                else B = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.LONG2NUM(B);
+            }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Blue = B;
             }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Blue = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Blue = B;
             }
             return Internal.SetIVar(self, "@blue", Args[0].Pointer);
         }
@@ -201,16 +311,29 @@ namespace peridot
         {
             RubyArray Args = new RubyArray(_args);
             ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-            if (Internal.NUM2LONG(Args[0].Pointer) < 0) Args[0].Pointer = Internal.LONG2NUM(0);
-            else if (Internal.NUM2LONG(Args[0].Pointer) > 255) Args[0].Pointer = Internal.LONG2NUM(255);
+            byte A = 0;
+            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            {
+                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) A = 0;
+                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) A = 255;
+                else A = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.rb_float_new(A);
+            }
+            else
+            {
+                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
+                if (Internal.NUM2LONG(Args[0].Pointer) < 0) A = 0;
+                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) A = 255;
+                else A = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Pointer = Internal.LONG2NUM(A);
+            }
             if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Alpha = A;
             }
             if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Alpha = (byte) Internal.NUM2LONG(Args[0].Pointer);
+                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Alpha = A;
             }
             return Internal.SetIVar(self, "@alpha", Args[0].Pointer);
         }
