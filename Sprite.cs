@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using RubyDotNET;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
+using rubydotnet;
 
 namespace peridot
 {
-    public class Sprite : RubyObject
+    public class Sprite : Ruby.Object
     {
-        public static IntPtr Class;
+        public new static string KlassName = "Sprite";
+        public new static Ruby.Class Class;
         public static Dictionary<IntPtr, odl.Sprite> SpriteDictionary = new Dictionary<IntPtr, odl.Sprite>();
 
-        public static Class CreateClass()
+        public Sprite(IntPtr Pointer) : base(Pointer) {  }
+
+        public static void Create()
         {
-            Class c = new Class("Sprite");
-            Class = c.Pointer;
-            c.DefineClassMethod("new", _new);
+            Ruby.Class c = Ruby.Class.DefineClass<Sprite>("Sprite");
+            Class = c;
             c.DefineMethod("initialize", initialize);
             c.DefineMethod("viewport", viewportget);
             c.DefineMethod("viewport=", viewportset);
@@ -54,574 +58,480 @@ namespace peridot
             c.DefineMethod("update", update);
             c.DefineMethod("dispose", dispose);
             c.DefineMethod("disposed?", disposed);
-            return c;
         }
 
-        protected static IntPtr allocate(IntPtr Class)
+        protected static Ruby.Object initialize(Ruby.Object Self, Ruby.Array Args)
         {
-            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
-        }
-
-        protected static IntPtr _new(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr obj = allocate(self);
-            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
-            return obj;
-        }
-
-        protected static IntPtr initialize(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr viewport = IntPtr.Zero;
-            if (Args.Length == 0 || Args.Length == 1 && Args[0].Pointer == Internal.QNil)
+            Args.Expect(0, 1);
+            Viewport viewport = null;
+            if (Args.Length == 0 || Args.Length == 1 && Args[0] == Ruby.Nil)
             {
-                viewport = Internal.GetGlobalVariable("$__mainvp__");
-                Internal.SetIVar(self, "@viewport", Internal.QNil);
+                viewport = Graphics.MainViewport;
+                Self.SetIVar("@viewport", Ruby.Nil);
             }
             else if (Args.Length == 1)
             {
-                Internal.EnsureType(Args[0].Pointer, Viewport.Class, "Viewport");
-                viewport = Args[0].Pointer;
-                Internal.SetIVar(self, "@viewport", viewport);
+                Args[0].Expect(Viewport.Class);
+                viewport = Args.Get<Viewport>(0);
+                Self.SetIVar("@viewport", viewport);
             }
-            else ScanArgs(1, Args);
-            Internal.SetIVar(self, "@x", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@y", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@z", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@ox", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@oy", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@opacity", Internal.LONG2NUM(255));
-            Internal.SetIVar(self, "@angle", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@zoom_x", Internal.rb_float_new(1d));
-            Internal.SetIVar(self, "@zoom_y", Internal.rb_float_new(1d));
-            IntPtr src_rect = Rect.CreateRect(new odl.Rect(0, 0, 0, 0));
-            Internal.SetIVar(self, "@src_rect", src_rect);
-            Internal.SetIVar(src_rect, "@__sprite__", self);
-            Internal.SetIVar(self, "@visible", Internal.QTrue);
-            Internal.SetIVar(self, "@mirror_x", Internal.QFalse);
-            Internal.SetIVar(self, "@mirror_y", Internal.QFalse);
-            IntPtr color = Color.CreateColor(odl.Color.ALPHA);
-            Internal.SetIVar(self, "@color", color);
-            Internal.SetIVar(color, "@__sprite__", self);
-            IntPtr tone = Tone.CreateTone(new odl.Tone());
-            Internal.SetIVar(self, "@tone", tone);
-            Internal.SetIVar(tone, "@__sprite__", self);
+            Self.SetIVar("@x", (Ruby.Integer) 0);
+            Self.SetIVar("@y", (Ruby.Integer) 0);
+            Self.SetIVar("@z", (Ruby.Integer) 0);
+            Self.SetIVar("@ox", (Ruby.Integer) 0);
+            Self.SetIVar("@oy", (Ruby.Integer) 0);
+            Self.SetIVar("@opacity", (Ruby.Integer) 255);
+            Self.SetIVar("@angle", (Ruby.Integer) 0);
+            Self.SetIVar("@zoom_x", (Ruby.Float) 1);
+            Self.SetIVar("@zoom_y", (Ruby.Float) 1);
+            Rect src_rect = Rect.CreateRect(new odl.Rect(0, 0, 0, 0));
+            src_rect.SetIVar("@__sprite__", Self);
+            Self.SetIVar("@src_rect", src_rect);
+            Self.SetIVar("@visible", Ruby.True);
+            Self.SetIVar("@mirror_x", Ruby.False);
+            Self.SetIVar("@mirror_y", Ruby.False);
+            Color color = Color.CreateColor(odl.Color.ALPHA);
+            color.SetIVar("@__sprite__", Self);
+            Self.SetIVar("@color", color);
+            Tone tone = Tone.CreateTone(new odl.Tone());
+            tone.SetIVar("@__sprite__", Self);
+            Self.SetIVar("@tone", tone);
+            Self.SetIVar("@disposed", Ruby.False);
 
-            if (!Viewport.ViewportDictionary.ContainsKey(viewport)) Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "invalid viewport");
-            odl.Sprite sprite = new odl.Sprite(Viewport.ViewportDictionary[viewport]);
-            if (SpriteDictionary.ContainsKey(self))
+            if (!Viewport.ViewportDictionary.ContainsKey(viewport.Pointer)) Ruby.Raise(Ruby.ErrorType.RuntimeError, "invalid viewport");
+            odl.Sprite sprite = new odl.Sprite(Viewport.ViewportDictionary[viewport.Pointer]);
+            if (SpriteDictionary.ContainsKey(Self.Pointer))
             {
-                SpriteDictionary[self].Dispose();
-                SpriteDictionary.Remove(self);
+                SpriteDictionary[Self.Pointer].Dispose();
+                SpriteDictionary.Remove(Self.Pointer);
             }
-            SpriteDictionary.Add(self, sprite);
-            return self;
+            SpriteDictionary.Add(Self.Pointer, sprite);
+            return Self;
         }
 
-        protected static IntPtr viewportget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object viewportget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@viewport");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@viewport");
         }
 
-        protected static IntPtr viewportset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object viewportset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            IntPtr ptr = Internal.QNil;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Ruby.Object obj = Ruby.Nil;
+            if (Args[0].IsNil())
             {
-                IntPtr global = Internal.GetGlobalVariable("$__mainvp__");
-                SpriteDictionary[self].Viewport = Viewport.ViewportDictionary[global];
+                SpriteDictionary[Self.Pointer].Viewport = Viewport.ViewportDictionary[Graphics.MainViewport.Pointer];
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, Viewport.Class, "Viewport");
-                SpriteDictionary[self].Viewport = Viewport.ViewportDictionary[Args[0].Pointer];
-                ptr = Args[0].Pointer;
+                Args[0].Expect(Viewport.Class);
+                SpriteDictionary[Self.Pointer].Viewport = Viewport.ViewportDictionary[Args[0].Pointer];
+                obj = Args[0];
             }
-            return Internal.SetIVar(self, "@viewport", ptr);
+            return Self.SetIVar("@viewport", obj);
         }
 
-        protected static IntPtr bitmapget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object bitmapget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@bitmap");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@bitmap");
         }
 
-        protected static IntPtr bitmapset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object bitmapset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].IsNil())
             {
-                SpriteDictionary[self].Bitmap = null;
+                SpriteDictionary[Self.Pointer].Bitmap = null;
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, Bitmap.Class, "Bitmap");
-                SpriteDictionary[self].Bitmap = Bitmap.BitmapDictionary[Args[0].Pointer];
+                Args[0].Expect(Bitmap.Class);
+                SpriteDictionary[Self.Pointer].Bitmap = Bitmap.BitmapDictionary[Args[0].Pointer];
             }
             int x = 0,
                 y = 0,
-                w = SpriteDictionary[self].Bitmap == null ? 0 : SpriteDictionary[self].Bitmap.Width,
-                h = SpriteDictionary[self].Bitmap == null ? 0 : SpriteDictionary[self].Bitmap.Height;
-            SpriteDictionary[self].SrcRect.X = 0;
-            SpriteDictionary[self].SrcRect.Y = 0;
-            SpriteDictionary[self].SrcRect.Width = w;
-            SpriteDictionary[self].SrcRect.Height = h;
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@x", Internal.LONG2NUM(x));
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@y", Internal.LONG2NUM(y));
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@width", Internal.LONG2NUM(w));
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@height", Internal.LONG2NUM(h));
-            return Internal.SetIVar(self, "@bitmap", Args[0].Pointer);
+                w = SpriteDictionary[Self.Pointer].Bitmap == null ? 0 : SpriteDictionary[Self.Pointer].Bitmap.Width,
+                h = SpriteDictionary[Self.Pointer].Bitmap == null ? 0 : SpriteDictionary[Self.Pointer].Bitmap.Height;
+            SpriteDictionary[Self.Pointer].SrcRect.X = 0;
+            SpriteDictionary[Self.Pointer].SrcRect.Y = 0;
+            SpriteDictionary[Self.Pointer].SrcRect.Width = w;
+            SpriteDictionary[Self.Pointer].SrcRect.Height = h;
+            Self.GetIVar("@src_rect").SetIVar("@x", (Ruby.Integer) x);
+            Self.GetIVar("@src_rect").SetIVar("@y", (Ruby.Integer) y);
+            Self.GetIVar("@src_rect").SetIVar("@width", (Ruby.Integer) w);
+            Self.GetIVar("@src_rect").SetIVar("@height", (Ruby.Integer) h);
+            return Self.SetIVar("@bitmap", Args[0]);
         }
 
-        protected static IntPtr xget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object xget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@x");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@x");
         }
 
-        protected static IntPtr xset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object xset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                SpriteDictionary[self].X = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[Self.Pointer].X = (int) Math.Round(Args.Get<Ruby.Float>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                SpriteDictionary[self].X = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Expect(Ruby.Integer.Class);
+                SpriteDictionary[Self.Pointer].X = Args.Get<Ruby.Integer>(0);
             }
-            return Internal.SetIVar(self, "@x", Args[0].Pointer);
+            return Self.SetIVar("@x", Args[0]);
         }
 
-        protected static IntPtr yget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object yget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@y");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@y");
         }
 
-        protected static IntPtr yset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object yset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                SpriteDictionary[self].Y = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[Self.Pointer].Y = (int) Math.Round(Args.Get<Ruby.Float>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                SpriteDictionary[self].Y = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Expect(Ruby.Integer.Class);
+                SpriteDictionary[Self.Pointer].Y = Args.Get<Ruby.Integer>(0);
             }
-            return Internal.SetIVar(self, "@y", Args[0].Pointer);
+            return Self.SetIVar("@y", Args[0]);
         }
 
-        protected static IntPtr zget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@z");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@z");
         }
 
-        protected static IntPtr zset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                SpriteDictionary[self].Z = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[Self.Pointer].Z = (int) Math.Round(Args.Get<Ruby.Float>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                SpriteDictionary[self].Z = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Expect(Ruby.Integer.Class);
+                SpriteDictionary[Self.Pointer].Z = Args.Get<Ruby.Integer>(0);
             }
-            return Internal.SetIVar(self, "@z", Args[0].Pointer);
+            return Self.SetIVar("@z", Args[0]);
         }
 
-        protected static IntPtr oxget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object oxget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@ox");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@ox");
         }
 
-        protected static IntPtr oxset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object oxset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                SpriteDictionary[self].OX = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[Self.Pointer].OX = (int) Math.Round(Args.Get<Ruby.Float>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                SpriteDictionary[self].OX = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Expect(Ruby.Integer.Class);
+                SpriteDictionary[Self.Pointer].OX = Args.Get<Ruby.Integer>(0);
             }
-            return Internal.SetIVar(self, "@ox", Args[0].Pointer);
+            return Self.SetIVar("@ox", Args[0]);
         }
 
-        protected static IntPtr oyget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object oyget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@oy");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@oy");
         }
 
-        protected static IntPtr oyset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object oyset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                SpriteDictionary[self].OY = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
+                SpriteDictionary[Self.Pointer].OY = (int) Math.Round(Args.Get<Ruby.Float>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                SpriteDictionary[self].OY = (int) Internal.NUM2LONG(Args[0].Pointer);
+                Args[0].Expect(Ruby.Integer.Class);
+                SpriteDictionary[Self.Pointer].OY = Args.Get<Ruby.Integer>(0);
             }
-            return Internal.SetIVar(self, "@oy", Args[0].Pointer);
+            return Self.SetIVar("@oy", Args[0]);
         }
 
-        protected static IntPtr zoom_xget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zoom_xget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@zoom_x");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@zoom_x");
         }
 
-        protected static IntPtr zoom_xset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zoom_xset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            double zoomx = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Integer))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Ruby.Object zoomx = null;
+            if (Args[0].Is(Ruby.Integer.Class))
             {
-                zoomx = Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(zoomx);
+                zoomx = (Ruby.Float) ((int) Args.Get<Ruby.Integer>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
-                zoomx = Internal.rb_num2dbl(Args[0].Pointer);
+                Args[0].Expect(Ruby.Float.Class);
+                zoomx = Args.Get<Ruby.Float>(0);
             }
-            SpriteDictionary[self].ZoomX = zoomx;
-            return Internal.SetIVar(self, "@zoom_x", Args[0].Pointer);
+            SpriteDictionary[Self.Pointer].ZoomX = (Ruby.Float) zoomx;
+            return Self.SetIVar("@zoom_x", zoomx);
         }
 
-        protected static IntPtr zoom_yget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zoom_yget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@zoom_y");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@zoom_y");
         }
 
-        protected static IntPtr zoom_yset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object zoom_yset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            double zoomy = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Integer))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Ruby.Object zoomy = null;
+            if (Args[0].Is(Ruby.Integer.Class))
             {
-                zoomy = Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(zoomy);
+                zoomy = (Ruby.Float) ((int) Args.Get<Ruby.Integer>(0));
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Float);
-                zoomy = Internal.rb_num2dbl(Args[0].Pointer);
+                Args[0].Expect(Ruby.Float.Class);
+                zoomy = Args.Get<Ruby.Float>(0);
             }
-            SpriteDictionary[self].ZoomY = zoomy;
-            return Internal.SetIVar(self, "@zoom_y", Args[0].Pointer);
+            SpriteDictionary[Self.Pointer].ZoomY = (Ruby.Float) zoomy;
+            return Self.SetIVar("@zoom_y", zoomy);
         }
 
-        protected static IntPtr opacityget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object opacityget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@opacity");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@opacity");
         }
 
-        protected static IntPtr opacityset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object opacityset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Ruby.Object opacity = null;
+            byte realopacity = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                int value = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
-                if (value < 0)
-                {
-                    value = 0;
-                    Args[0].Pointer = Internal.rb_float_new(0);
-                }
-                else if (value > 255)
-                {
-                    value = 255;
-                    Args[0].Pointer = Internal.rb_float_new(255);
-                }
-                SpriteDictionary[self].Opacity = (byte) value;
+                if (Args.Get<Ruby.Float>(0) < 0) opacity = (Ruby.Float) 0;
+                else if (Args.Get<Ruby.Float>(0) > 255) opacity = (Ruby.Float) 255;
+                else opacity = Args.Get<Ruby.Float>(0);
+                realopacity = (byte) Math.Round((Ruby.Float) opacity);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                int value = (int) Internal.NUM2LONG(Args[0].Pointer);
-                if (value < 0)
-                {
-                    value = 0;
-                    Args[0].Pointer = Internal.LONG2NUM(0);
-                }
-                else if (value > 255)
-                {
-                    value = 255;
-                    Args[0].Pointer = Internal.LONG2NUM(255);
-                }
-                SpriteDictionary[self].Opacity = (byte) value;
+                Args[0].Expect(Ruby.Integer.Class);
+                if (Args.Get<Ruby.Integer>(0) < 0) opacity = (Ruby.Integer) 0;
+                else if (Args.Get<Ruby.Integer>(0) > 255) opacity = (Ruby.Integer) 255;
+                else opacity = Args.Get<Ruby.Integer>(0);
+                realopacity = (byte) (Ruby.Integer) opacity;
             }
-            return Internal.SetIVar(self, "@opacity", Args[0].Pointer);
+            SpriteDictionary[Self.Pointer].Opacity = realopacity;
+            return Self.SetIVar("@opacity", opacity);
         }
 
-        protected static IntPtr angleget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object angleget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@angle");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@angle");
         }
 
-        protected static IntPtr angleset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object angleset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Ruby.Object angle = null;
+            short realangle = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                int angle = (int) Math.Round(Internal.rb_num2dbl(Args[0].Pointer));
-                SpriteDictionary[self].Angle = angle % 360;
+                angle = Args.Get<Ruby.Float>(0);
+                realangle = (short) ((Ruby.Float) angle % (Ruby.Integer) 360);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                int angle = (int) Internal.NUM2LONG(Args[0].Pointer);
-                SpriteDictionary[self].Angle = angle % 360;
+                Args[0].Expect(Ruby.Integer.Class);
+                angle = Args.Get<Ruby.Integer>(0);
+                realangle = (short) ((Ruby.Integer) angle % 360);
             }
-            return Internal.SetIVar(self, "@angle", Args[0].Pointer);
+            SpriteDictionary[Self.Pointer].Angle = realangle;
+            return Self.SetIVar("@angle", angle);
         }
 
-        protected static IntPtr src_rectget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object src_rectget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@src_rect");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@src_rect");
         }
 
-        protected static IntPtr src_rectset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object src_rectset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, Rect.Class, "Rect");
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@__sprite__", Internal.QNil);
-            SpriteDictionary[self].SrcRect = Rect.CreateRect(Args[0].Pointer);
-            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
-            return Internal.SetIVar(self, "@src_rect", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Rect.Class);
+            Self.GetIVar("@src_rect").SetIVar("@__sprite__", Ruby.Nil);
+            SpriteDictionary[Self.Pointer].SrcRect = Rect.CreateRect(Args[0]);
+            Args[0].SetIVar("@__sprite__", Self);
+            return Self.SetIVar("@src_rect", Args[0]);
         }
 
-        protected static IntPtr visibleget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object visibleget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@visible");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@visible");
         }
 
-        protected static IntPtr visibleset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object visibleset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
-            {
-                SpriteDictionary[self].Visible = false;
-            }
-            else
-            {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
-                SpriteDictionary[self].Visible = Args[0].Pointer == Internal.QTrue;
-            }
-            return Internal.SetIVar(self, "@visible", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
+            return Self.SetIVar("@visible", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
         }
 
-        protected static IntPtr mirror_xget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object mirror_xget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@mirror_x");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@mirror_x");
         }
 
-        protected static IntPtr mirror_xset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object mirror_xset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
-            {
-                SpriteDictionary[self].MirrorX = false;
-            }
-            else
-            {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
-                SpriteDictionary[self].MirrorX = Args[0].Pointer == Internal.QTrue;
-            }
-            return Internal.SetIVar(self, "@mirror_x", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
+            return Self.SetIVar("@mirror_x", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
         }
 
-        protected static IntPtr mirror_yget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object mirror_yget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@mirror_y");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@mirror_y");
         }
 
-        protected static IntPtr mirror_yset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object mirror_yset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Nil))
-            {
-                SpriteDictionary[self].MirrorY = false;
-            }
-            else
-            {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Bool);
-                SpriteDictionary[self].MirrorY = Args[0].Pointer == Internal.QTrue;
-            }
-            return Internal.SetIVar(self, "@mirror_y", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
+            return Self.SetIVar("@mirror_y", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
         }
 
-        protected static IntPtr colorget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object colorget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@color");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@color");
         }
 
-        protected static IntPtr colorset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object colorset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, Color.Class, "Color");
-            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
-            SpriteDictionary[self].Color = Color.CreateColor(Args[0].Pointer);
-            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
-            return Internal.SetIVar(self, "@color", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Color.Class);
+            Self.GetIVar("@color").SetIVar("@__sprite__", Ruby.Nil);
+            SpriteDictionary[Self.Pointer].Color = Color.CreateColor(Args[0]);
+            Args[0].SetIVar("@__sprite__", Self);
+            return Self.SetIVar("@color", Args[0]);
         }
 
-        protected static IntPtr toneget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object toneget(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@tone");
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Self.GetIVar("@tone");
         }
 
-        protected static IntPtr toneset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object toneset(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            Internal.EnsureType(Args[0].Pointer, Tone.Class, "Tone");
-            Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
-            SpriteDictionary[self].Tone = Tone.CreateTone(Internal.GetIVar(self, "@tone"));
-            Internal.SetIVar(Args[0].Pointer, "@__sprite__", self);
-            return Internal.SetIVar(self, "@tone", Args[0].Pointer);
+            GuardDisposed(Self);
+            Args.Expect(1);
+            Args[0].Expect(Tone.Class);
+            Self.GetIVar("@tone").SetIVar("@__sprite__", Ruby.Nil);
+            SpriteDictionary[Self.Pointer].Tone = Tone.CreateTone(Args[0]);
+            Args[0].SetIVar("@__sprite__", Self);
+            return Self.SetIVar("@tone", Args[0]);
         }
 
-        protected static IntPtr update(IntPtr self, IntPtr _args)
+        protected static Ruby.Object update(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.QNil;
+            GuardDisposed(Self);
+            Args.Expect(0);
+            return Ruby.Nil;
         }
 
-        protected static IntPtr dispose(IntPtr self, IntPtr _args)
+        protected static Ruby.Object dispose(Ruby.Object Self, Ruby.Array Args)
         {
-            GuardDisposed(self);
-            if (_args != IntPtr.Zero)
-            {
-                RubyArray Args = new RubyArray(_args);
-                ScanArgs(0, Args);
-            }
-            SpriteDictionary[self].Dispose();
-            Internal.SetIVar(Internal.GetIVar(self, "@src_rect"), "@__sprite__", Internal.QNil);
-            Internal.SetIVar(Internal.GetIVar(self, "@color"), "@__sprite__", Internal.QNil);
-            Internal.SetIVar(Internal.GetIVar(self, "@tone"), "@__sprite__", Internal.QNil);
+            GuardDisposed(Self);
+            Args.Expect(0);
+            SpriteDictionary[Self.Pointer].Dispose();
+            Self.GetIVar("@src_rect").SetIVar("@__sprite__", Ruby.Nil);
+            Self.GetIVar("@color").SetIVar("@__sprite__", Ruby.Nil);
+            Self.GetIVar("@tone").SetIVar("@__sprite__", Ruby.Nil);
             foreach (KeyValuePair<IntPtr, odl.Bitmap> kvp in Bitmap.BitmapDictionary)
             {
-                if (kvp.Value == SpriteDictionary[self].Bitmap)
+                if (kvp.Value == SpriteDictionary[Self.Pointer].Bitmap)
                 {
                     Bitmap.BitmapDictionary.Remove(kvp.Key);
                     break;
                 }
             }
-            SpriteDictionary.Remove(self);
-            Internal.SetIVar(self, "@disposed", Internal.QTrue);
-            return Internal.QTrue;
+            SpriteDictionary.Remove(Self.Pointer);
+            Self.SetIVar("@disposed", Ruby.True);
+            return Ruby.True;
         }
 
-        protected static IntPtr disposed(IntPtr self, IntPtr _args)
+        protected static Ruby.Object disposed(Ruby.Object Self, Ruby.Array Args)
         {
-            if (_args != IntPtr.Zero)
-            {
-                RubyArray Args = new RubyArray(_args);
-                ScanArgs(0, Args);
-            }
-            return Internal.GetIVar(self, "@disposed") == Internal.QTrue ? Internal.QTrue : Internal.QFalse;
+            Args.Expect(0);
+            return Self.GetIVar("@disposed") == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False;
         }
 
-        public static void GuardDisposed(IntPtr self)
+        public static void GuardDisposed(Ruby.Object Self)
         {
-            if (disposed(self, IntPtr.Zero) == Internal.QTrue)
+            if (Self.GetIVar("@disposed") == Ruby.True)
             {
-                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "sprite already disposed");
+                Ruby.Raise(Ruby.ErrorType.RuntimeError, "sprite already disposed");
             }
         }
     }

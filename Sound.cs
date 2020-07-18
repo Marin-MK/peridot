@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using RubyDotNET;
+using rubydotnet;
 
 namespace peridot
 {
-    public class Sound : RubyObject
+    /*public class Sound : RubyObject
     {
         public static IntPtr Class;
         public static Dictionary<IntPtr, odl.Sound> SoundDictionary = new Dictionary<IntPtr, odl.Sound>();
@@ -351,5 +351,5 @@ namespace peridot
                 Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "sound already disposed");
             }
         }
-    }
+    }*/
 }

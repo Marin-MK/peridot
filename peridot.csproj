@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\odl\odl.csproj" />
-    <ProjectReference Include="..\rubydotnet\RubyDotNET.csproj" />
+    <ProjectReference Include="..\rubydotnet\rubydotnet.csproj" />
   </ItemGroup>
 
   <ItemGroup>

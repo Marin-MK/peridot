@@ -1,45 +1,37 @@
 ﻿using System;
-using RubyDotNET;
+using rubydotnet;
 
 namespace peridot
 {
-    public class Audio : RubyObject
+    public class Audio : Ruby.Object
     {
-        public static IntPtr Module;
+        public new static string KlassName = "Audio";
+        public static Ruby.Module Module;
 
-        public static Module CreateModule()
+        public Audio(IntPtr Pointer) : base(Pointer) { }
+
+        public static void Create()
         {
-            Module m = new Module("Audio");
-            Module = m.Pointer;
+            Ruby.Module m = Ruby.Module.DefineModule<Audio>(KlassName);
+            Module = m;
             m.DefineClassMethod("se_play", se_play);
             m.DefineClassMethod("bgm_play", bgm_play);
-            return m;
         }
 
-        protected static IntPtr se_play(IntPtr self, IntPtr _args)
+        protected static Ruby.Object se_play(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("is_a?"), 1, new IntPtr[] { Internal.rb_cString.Pointer }) == Internal.QTrue)
-            {
-                string filename = new RubyString(Args[0].Pointer).ToString();
-                odl.Audio.Play(filename);
-            }
-            else
-            {
-                odl.Sound sound = Sound.SoundDictionary[Args[0].Pointer];
-                odl.Audio.Play(sound);
-            }
-            return Internal.QTrue;
+            Args.Expect(1);
+            Args[0].Expect(Ruby.String.Class); 
+            odl.Audio.Play(Args.Get<Ruby.String>(0));
+            return Ruby.True;
         }
 
-        protected static IntPtr bgm_play(IntPtr self, IntPtr _args)
+        protected static Ruby.Object bgm_play(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            if (!Config.FakeWin32API) ScanArgs(1, Args);
-            string filename = new RubyString(Args[0].Pointer).ToString();
-            odl.Audio.Play(filename);
-            return Internal.QTrue;
+            if (!Config.FakeWin32API) Args.Expect(1);
+            Args[0].Expect(Ruby.String.Class);
+            odl.Audio.Play(Args.Get<Ruby.String>(0));
+            return Ruby.True;
         }
     }
 }

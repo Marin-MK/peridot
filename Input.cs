@@ -1,17 +1,20 @@
 ﻿using System;
-using RubyDotNET;
+using rubydotnet;
 using static SDL2.SDL;
 
 namespace peridot
 {
-    public class Input : RubyObject
+    public class Input : Ruby.Object
     {
-        public static IntPtr Module;
+        public new static string KlassName = "Input";
+        public static Ruby.Module Module;
 
-        public static Module CreateModule()
+        public Input(IntPtr Pointer) : base(Pointer) { }
+
+        public static void Create()
         {
-            Module m = new Module("Input");
-            Module = m.Pointer;
+            Ruby.Module m = Ruby.Module.DefineModule<Input>(KlassName);
+            Module = m;
             m.DefineClassMethod("trigger?", trigger);
             m.DefineClassMethod("press?", press);
             DefineButton(m, "A", SDL_Keycode.SDLK_a);
@@ -83,64 +86,63 @@ namespace peridot
             DefineButton(m, "SPACE", SDL_Keycode.SDLK_SPACE);
             DefineButton(m, "TAB", SDL_Keycode.SDLK_TAB);
             DefineButton(m, "CAPSLOCK", SDL_Keycode.SDLK_CAPSLOCK);
-            return m;
         }
 
-        protected static void DefineButton(Module Module, string Name, params SDL_Keycode[] keycodes)
+        protected static void DefineButton(Ruby.Module Module, string Name, params SDL_Keycode[] keycodes)
         {
             if (keycodes.Length == 1)
             {
-                Module.DefineConstant(Name, Internal.LONG2NUM(System.Convert.ToInt64(keycodes[0])));
+                Module.SetConst(Name, (Ruby.Integer) System.Convert.ToInt64(keycodes[0]));
             }
             else
             {
-                RubyArray ary = new RubyArray();
+                Ruby.Array ary = new Ruby.Array();
                 for (int i = 0; i < keycodes.Length; i++)
                 {
-                    ary.Add(new RubyInt(Internal.LONG2NUM(System.Convert.ToInt64(keycodes[i]))));
+                    ary.Funcall("push", (Ruby.Integer) System.Convert.ToInt64(keycodes[i]));
                 }
-                Module.DefineConstant(Name, ary.Pointer);
+                Module.SetConst(Name, ary);
             }
         }
 
-        protected static IntPtr trigger(IntPtr self, IntPtr _args)
+        protected static Ruby.Object trigger(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Array))
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Array.Class))
             {
-                RubyArray Keys = new RubyArray(Args[0].Pointer);
+                Ruby.Array Keys = Args.Get<Ruby.Array>(0);
                 for (int i = 0; i < Keys.Length; i++)
                 {
-                    if (odl.Input.Trigger(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
+                    Keys[i].Expect(Ruby.Integer.Class);
+                    if (odl.Input.Trigger(Keys[i].Convert<Ruby.Integer>())) return Ruby.True;
                 }
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (odl.Input.Trigger(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+                Args[0].Expect(Ruby.Integer.Class);
+                if (odl.Input.Trigger(Args.Get<Ruby.Integer>(0))) return Ruby.True;
             }
-            return Internal.QFalse;
+            return Ruby.False;
         }
 
-        protected static IntPtr press(IntPtr self, IntPtr _args)
+        protected static Ruby.Object press(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Array))
+            Args.Expect(1);
+            if (Args[0].Is(Ruby.Array.Class))
             {
-                RubyArray Keys = new RubyArray(Args[0].Pointer);
+                Ruby.Array Keys = Args.Get<Ruby.Array>(0);
                 for (int i = 0; i < Keys.Length; i++)
                 {
-                    if (odl.Input.Press(Internal.NUM2LONG(Keys[i].Pointer))) return Internal.QTrue;
+                    Keys[i].Expect(Ruby.Integer.Class);
+                    if (odl.Input.Press(Keys[i].Convert<Ruby.Integer>())) return Ruby.True;
                 }
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (odl.Input.Press(Internal.NUM2LONG(Args[0].Pointer))) return Internal.QTrue;
+                Args[0].Expect(Ruby.Integer.Class);
+                if (odl.Input.Press(Args.Get<Ruby.Integer>(0))) return Ruby.True;
             }
-            return Internal.QFalse;
+            return Ruby.False;
         }
     }
 }

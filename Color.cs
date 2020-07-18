@@ -1,17 +1,20 @@
 ﻿using System;
-using RubyDotNET;
+using System.Threading;
+using rubydotnet;
 
 namespace peridot
 {
-    public class Color : RubyObject
+    public class Color : Ruby.Object
     {
-        public static IntPtr Class;
+        public new static string KlassName = "Color";
+        public new static Ruby.Class Class;
 
-        public static Class CreateClass()
+        public Color(IntPtr Pointer) : base(Pointer) { }
+
+        public static void Create()
         {
-            Class c = new Class("Color");
-            Class = c.Pointer;
-            c.DefineClassMethod("new", _new);
+            Ruby.Class c = Ruby.Class.DefineClass<Color>(KlassName);
+            Class = c;
             c.DefineClassMethod("_load", _load);
             c.DefineMethod("initialize", initialize);
             c.DefineMethod("red", redget);
@@ -22,314 +25,288 @@ namespace peridot
             c.DefineMethod("blue=", blueset);
             c.DefineMethod("alpha", alphaget);
             c.DefineMethod("alpha=", alphaset);
-            return c;
         }
 
-        public static odl.Color CreateColor(IntPtr self)
+        public static odl.Color CreateColor(Ruby.Object Self)
         {
             byte R = 0,
                  G = 0,
                  B = 0,
                  A = 0;
-            if (Internal.IsType(Internal.GetIVar(self, "@red"), RubyClass.Float))
+            if (Self.GetIVar("@red").Is(Ruby.Float.Class))
             {
-                R = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@red")));
+                R = (byte) Math.Round(Self.AutoGetIVar<Ruby.Float>("@red"));
             }
             else
             {
-                R = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@red"));
+                R = (byte) Self.AutoGetIVar<Ruby.Integer>("@red");
             }
-            if (Internal.IsType(Internal.GetIVar(self, "@green"), RubyClass.Float))
+            if (Self.GetIVar("@green").Is(Ruby.Float.Class))
             {
-                G = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@green")));
-            }
-            else
-            {
-                G = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@green"));
-            }
-            if (Internal.IsType(Internal.GetIVar(self, "@blue"), RubyClass.Float))
-            {
-                B = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@blue")));
+                G = (byte) Math.Round(Self.AutoGetIVar<Ruby.Float>("@green"));
             }
             else
             {
-                B = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@blue"));
+                G = (byte) Self.AutoGetIVar<Ruby.Integer>("@green");
             }
-            if (Internal.IsType(Internal.GetIVar(self, "@alpha"), RubyClass.Float))
+            if (Self.GetIVar("@blue").Is(Ruby.Float.Class))
             {
-                A = (byte) Math.Round(Internal.rb_num2dbl(Internal.GetIVar(self, "@alpha")));
+                B = (byte) Math.Round(Self.AutoGetIVar<Ruby.Float>("@blue"));
             }
             else
             {
-                A = (byte) Internal.NUM2LONG(Internal.GetIVar(self, "@alpha"));
+                B = (byte) Self.AutoGetIVar<Ruby.Integer>("@blue");
+            }
+            if (Self.GetIVar("@alpha").Is(Ruby.Float.Class))
+            {
+                A = (byte) Math.Round(Self.AutoGetIVar<Ruby.Float>("@alpha"));
+            }
+            else
+            {
+                A = (byte) Self.AutoGetIVar<Ruby.Integer>("@alpha");
             }
             return new odl.Color(R, G, B, A);
         }
 
-        public static IntPtr CreateColor(odl.Color Color)
+        public static Color CreateColor(odl.Color Color)
         {
-            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
-            {
-                Internal.LONG2NUM(Color.Red),
-                Internal.LONG2NUM(Color.Green),
-                Internal.LONG2NUM(Color.Blue),
-                Internal.LONG2NUM(Color.Alpha)
-            });
+            return Class.AutoFuncall<Color>("new", 
+                (Ruby.Integer) Color.Red,
+                (Ruby.Integer) Color.Green,
+                (Ruby.Integer) Color.Blue,
+                (Ruby.Integer) Color.Alpha
+            );
         }
 
-        protected static IntPtr allocate(IntPtr Class)
+        protected static Ruby.Object initialize(Ruby.Object Self, Ruby.Array Args)
         {
-            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
-        }
-
-        protected static IntPtr _new(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr obj = allocate(self);
-            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
-            return obj;
-        }
-
-        protected static IntPtr initialize(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr R = IntPtr.Zero,
-                   G = IntPtr.Zero,
-                   B = IntPtr.Zero,
-                   A = IntPtr.Zero;
+            //Args.Expect(3, 4);
+            Ruby.Object R = (Ruby.Integer) 0,
+                        G = (Ruby.Integer) 0,
+                        B = (Ruby.Integer) 0,
+                        A = (Ruby.Integer) 0;
             if (Args.Length == 3 || Args.Length == 4)
             {
-                if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
-                {
-                    if (Internal.rb_num2dbl(Args[0].Pointer) < 0) R = Internal.rb_float_new(0);
-                    else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) R = Internal.rb_float_new(255);
-                    else R = Args[0].Pointer;
-                }
-                else
-                {
-                    Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                    if (Internal.NUM2LONG(Args[0].Pointer) < 0) R = Internal.LONG2NUM(0);
-                    else if (Internal.NUM2LONG(Args[0].Pointer) > 255) R = Internal.LONG2NUM(255);
-                    else R = Args[0].Pointer;
-                }
-                if (Internal.IsType(Args[1].Pointer, RubyClass.Float))
-                {
-                    if (Internal.rb_num2dbl(Args[1].Pointer) < 0) G = Internal.rb_float_new(0);
-                    else if (Internal.rb_num2dbl(Args[1].Pointer) > 255) G = Internal.rb_float_new(255);
-                    else G = Args[1].Pointer;
-                }
-                else
-                {
-                    Internal.EnsureType(Args[1].Pointer, RubyClass.Integer);
-                    if (Internal.NUM2LONG(Args[1].Pointer) < 0) G = Internal.LONG2NUM(0);
-                    else if (Internal.NUM2LONG(Args[1].Pointer) > 255) G = Internal.LONG2NUM(255);
-                    else G = Args[1].Pointer;
-                }
-                if (Internal.IsType(Args[2].Pointer, RubyClass.Float))
-                {
-                    if (Internal.rb_num2dbl(Args[2].Pointer) < 0) B = Internal.rb_float_new(0);
-                    else if (Internal.rb_num2dbl(Args[2].Pointer) > 255) B = Internal.rb_float_new(255);
-                    else B = Args[2].Pointer;
-                }
-                else
-                {
-                    Internal.EnsureType(Args[2].Pointer, RubyClass.Integer);
-                    if (Internal.NUM2LONG(Args[2].Pointer) < 0) B = Internal.LONG2NUM(0);
-                    else if (Internal.NUM2LONG(Args[2].Pointer) > 255) B = Internal.LONG2NUM(255);
-                    else B = Args[2].Pointer;
-                }
+                //if (Args[0].Is(Ruby.Float.Class))
+                //{
+                    /*if (Args.Get<Ruby.Float>(0) < 0) R = (Ruby.Float) 0;
+                    else if (Args.Get<Ruby.Float>(0) > 255) R = (Ruby.Float) 255;
+                    else R = Args[0];*/
+                //}
+                //else
+                //{
+                    /*Args[0].Expect(Ruby.Integer.Class);
+                    if (Args.Get<Ruby.Integer>(0) < 0) R = (Ruby.Integer) 0;
+                    else if (Args.Get<Ruby.Integer>(0) > 255) R = (Ruby.Integer) 255;
+                    else*/ R = Args[0];
+                //}
+                //if (Args[1].Is(Ruby.Float.Class))
+                //{
+                    /*if (Args.Get<Ruby.Float>(1) < 0) G = (Ruby.Float) 0;
+                    else if (Args.Get<Ruby.Float>(1) > 255) G = (Ruby.Float) 255;
+                    else G = Args[1];*/
+                //}
+                //else
+                //{
+                    /*Args[1].Expect(Ruby.Integer.Class);
+                    if (Args.Get<Ruby.Integer>(1) < 0) G = (Ruby.Integer) 0;
+                    else if (Args.Get<Ruby.Integer>(1) > 255) G = (Ruby.Integer) 255;
+                    else*/ G = Args[1];
+                //}
+                //if (Args[2].Is(Ruby.Float.Class))
+                //{
+                    /*if (Args.Get<Ruby.Float>(2) < 0) B = (Ruby.Float) 0;
+                    else if (Args.Get<Ruby.Float>(2) > 255) B = (Ruby.Float) 255;
+                    else B = Args[2];*/
+                //}
+                //else
+                //{
+                    /*Args[2].Expect(Ruby.Integer.Class);
+                    if (Args.Get<Ruby.Integer>(2) < 0) B = (Ruby.Integer) 0;
+                    else if (Args.Get<Ruby.Integer>(2) > 255) B = (Ruby.Integer) 255;
+                    else*/ B = Args[2];
+                //}
                 if (Args.Length == 4)
                 {
-                    if (Internal.IsType(Args[3].Pointer, RubyClass.Float))
-                    {
-                        if (Internal.rb_num2dbl(Args[3].Pointer) < 0) A = Internal.rb_float_new(0);
-                        else if (Internal.rb_num2dbl(Args[3].Pointer) > 255) A = Internal.rb_float_new(255);
-                        else A = Args[3].Pointer;
-                    }
-                    else
-                    {
-                        Internal.EnsureType(Args[3].Pointer, RubyClass.Integer);
-                        if (Internal.NUM2LONG(Args[3].Pointer) < 0) A = Internal.LONG2NUM(0);
-                        else if (Internal.NUM2LONG(Args[3].Pointer) > 255) A = Internal.LONG2NUM(255);
-                        else A = Args[3].Pointer;
-                    }
+                    //if (Args[3].Is(Ruby.Float.Class))
+                    //{
+                        /*if (Args.Get<Ruby.Float>(3) < 0) A = (Ruby.Float) 0;
+                        else if (Args.Get<Ruby.Float>(3) > 255) A = (Ruby.Float) 255;
+                        else A = Args[3];*/
+                    //}
+                    //else
+                    //{
+                        /*Args[3].Expect(Ruby.Integer.Class);
+                        if (Args.Get<Ruby.Integer>(3) < 0) A = (Ruby.Integer) 0;
+                        else if (Args.Get<Ruby.Integer>(3) > 255) A = (Ruby.Integer) 255;
+                        else*/ A = Args[3];
+                    //}
                 }
-                else A = Internal.LONG2NUM(255);
+                else A = (Ruby.Integer) 255;
             }
-            else ScanArgs(3, Args);
-            Internal.SetIVar(self, "@red", R);
-            Internal.SetIVar(self, "@green", G);
-            Internal.SetIVar(self, "@blue", B);
-            Internal.SetIVar(self, "@alpha", A);
-            return self;
+            Self.SetIVar("@red", R);
+            Self.SetIVar("@green", G);
+            Self.SetIVar("@blue", B);
+            Self.SetIVar("@alpha", A);
+            return Self;
         }
 
-        protected static IntPtr _load(IntPtr _self, IntPtr _args)
+        protected static Ruby.Object _load(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
+            Args.Expect(1);
             
-            RubyArray ary = new RubyArray(Internal.rb_funcallv(Args[0].Pointer, Internal.rb_intern("unpack"), 1, Internal.rb_str_new_cstr("D*")));
+            Ruby.Array ary = Args[0].AutoFuncall<Ruby.Array>("unpack", (Ruby.String) "D*");
+            ary.Expect(4);
 
-            return Internal.rb_funcallv(Class, Internal.rb_intern("new"), 4, new IntPtr[4]
-            {
-                ary[0].Pointer, 
-                ary[1].Pointer,
-                ary[2].Pointer,
-                ary[3].Pointer
-            });
+            return Class.Funcall("new", ary[0], ary[2], ary[3], ary[4]);
         }
 
-        protected static IntPtr redget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object redget(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@red");
+            Args.Expect(0);
+            return Self.GetIVar("@red");
         }
 
-        protected static IntPtr redset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object redset(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            byte R = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            Args.Expect(1);
+            Ruby.Object R = null;
+            byte realr = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) R = 0;
-                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) R = 255;
-                else R = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(R);
+                if (Args.Get<Ruby.Float>(0) < 0) R = (Ruby.Float) 0;
+                else if (Args.Get<Ruby.Float>(0) > 255) R = (Ruby.Float) 255;
+                else R = Args.Get<Ruby.Float>(0);
+                realr = (byte) Math.Round((Ruby.Float) R);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (Internal.NUM2LONG(Args[0].Pointer) < 0) R = 0;
-                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) R = 255;
-                else R = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.LONG2NUM(R);
+                Args[0].Expect(Ruby.Integer.Class);
+                if (Args.Get<Ruby.Integer>(0) < 0) R = (Ruby.Integer) 0;
+                else if (Args.Get<Ruby.Integer>(0) > 255) R = (Ruby.Integer) 255;
+                else R = Args.Get<Ruby.Integer>(0);
+                realr = (byte) (Ruby.Integer) R;
             }
-            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            if (Self.GetIVar("@__viewport__") != Ruby.Nil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Red = R;
+                Viewport.ViewportDictionary[Self.RawGetIVar("@__viewport__")].Color.Red = realr;
             }
-            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Red = R;
+                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Color.Red = realr;
             }
-            return Internal.SetIVar(self, "@red", Args[0].Pointer);
+            return Self.SetIVar("@red", R);
         }
 
-        protected static IntPtr greenget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object greenget(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@green");
+            Args.Expect(0);
+            return Self.GetIVar("@green");
         }
 
-        protected static IntPtr greenset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object greenset(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            byte G = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            Args.Expect(1);
+            Ruby.Object G = null;
+            byte realg = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) G = 0;
-                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) G = 255;
-                else G = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(G);
+                if (Args.Get<Ruby.Float>(0) < 0) G = (Ruby.Float) 0;
+                else if (Args.Get<Ruby.Float>(0) > 255) G = (Ruby.Float) 255;
+                else G = Args.Get<Ruby.Float>(0);
+                realg = (byte) Math.Round((Ruby.Float) G);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (Internal.NUM2LONG(Args[0].Pointer) < 0) G = 0;
-                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) G = 255;
-                else G = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.LONG2NUM(G);
+                Args[0].Expect(Ruby.Integer.Class);
+                if (Args.Get<Ruby.Integer>(0) < 0) G = (Ruby.Integer) 0;
+                else if (Args.Get<Ruby.Integer>(0) > 255) G = (Ruby.Integer) 255;
+                else G = Args.Get<Ruby.Integer>(0);
+                realg = (byte) (Ruby.Integer) G;
             }
-            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            if (Self.GetIVar("@__viewport__") != Ruby.Nil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Green = G;
+                Viewport.ViewportDictionary[Self.RawGetIVar("@__viewport__")].Color.Green = realg;
             }
-            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Green = G;
+                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Color.Green = realg;
             }
-            return Internal.SetIVar(self, "@green", Args[0].Pointer);
+            return Self.SetIVar("@green", G);
         }
 
-        protected static IntPtr blueget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object blueget(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@blue");
+            Args.Expect(0);
+            return Self.GetIVar("@blue");
         }
 
-        protected static IntPtr blueset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object blueset(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            byte B = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            Args.Expect(1);
+            Ruby.Object B = null;
+            byte realb = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) B = 0;
-                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) B = 255;
-                else B = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(B);
+                if (Args.Get<Ruby.Float>(0) < 0) B = (Ruby.Float) 0;
+                else if (Args.Get<Ruby.Float>(0) > 255) B = (Ruby.Float) 255;
+                else B = Args.Get<Ruby.Float>(0);
+                realb = (byte) Math.Round((Ruby.Float) B);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (Internal.NUM2LONG(Args[0].Pointer) < 0) B = 0;
-                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) B = 255;
-                else B = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.LONG2NUM(B);
+                Args[0].Expect(Ruby.Integer.Class);
+                if (Args.Get<Ruby.Integer>(0) < 0) B = (Ruby.Integer) 0;
+                else if (Args.Get<Ruby.Integer>(0) > 255) B = (Ruby.Integer) 255;
+                else B = Args.Get<Ruby.Integer>(0);
+                realb = (byte) (Ruby.Integer) B;
             }
-            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            if (Self.GetIVar("@__viewport__") != Ruby.Nil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Blue = B;
+                Viewport.ViewportDictionary[Self.RawGetIVar("@__viewport__")].Color.Blue = realb;
             }
-            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Blue = B;
+                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Color.Blue = realb;
             }
-            return Internal.SetIVar(self, "@blue", Args[0].Pointer);
+            return Self.SetIVar("@blue", B);
         }
 
-        protected static IntPtr alphaget(IntPtr self, IntPtr _args)
+        protected static Ruby.Object alphaget(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@alpha");
+            Args.Expect(0);
+            return Self.GetIVar("@alpha");
         }
 
-        protected static IntPtr alphaset(IntPtr self, IntPtr _args)
+        protected static Ruby.Object alphaset(Ruby.Object Self, Ruby.Array Args)
         {
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            byte A = 0;
-            if (Internal.IsType(Args[0].Pointer, RubyClass.Float))
+            Args.Expect(1);
+            Ruby.Object A = null;
+            byte reala = 0;
+            if (Args[0].Is(Ruby.Float.Class))
             {
-                if (Internal.rb_num2dbl(Args[0].Pointer) < 0) A = 0;
-                else if (Internal.rb_num2dbl(Args[0].Pointer) > 255) A = 255;
-                else A = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.rb_float_new(A);
+                if (Args.Get<Ruby.Float>(0) < 0) A = (Ruby.Float) 0;
+                else if (Args.Get<Ruby.Float>(0) > 255) A = (Ruby.Float) 255;
+                else A = Args.Get<Ruby.Float>(0);
+                reala = (byte) Math.Round((Ruby.Float) A);
             }
             else
             {
-                Internal.EnsureType(Args[0].Pointer, RubyClass.Integer);
-                if (Internal.NUM2LONG(Args[0].Pointer) < 0) A = 0;
-                else if (Internal.NUM2LONG(Args[0].Pointer) > 255) A = 255;
-                else A = (byte) Internal.NUM2LONG(Args[0].Pointer);
-                Args[0].Pointer = Internal.LONG2NUM(A);
+                Args[0].Expect(Ruby.Integer.Class);
+                if (Args.Get<Ruby.Integer>(0) < 0) A = (Ruby.Integer) 0;
+                else if (Args.Get<Ruby.Integer>(0) > 255) A = (Ruby.Integer) 255;
+                else A = Args.Get<Ruby.Integer>(0);
+                reala = (byte) (Ruby.Integer) A;
             }
-            if (Internal.GetIVar(self, "@__viewport__") != Internal.QNil)
+            if (Self.GetIVar("@__viewport__") != Ruby.Nil)
             {
-                Viewport.ViewportDictionary[Internal.GetIVar(self, "@__viewport__")].Color.Alpha = A;
+                Viewport.ViewportDictionary[Self.RawGetIVar("@__viewport__")].Color.Alpha = reala;
             }
-            if (Internal.GetIVar(self, "@__sprite__") != Internal.QNil)
+            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Internal.GetIVar(self, "@__sprite__")].Color.Alpha = A;
+                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Color.Alpha = reala;
             }
-            return Internal.SetIVar(self, "@alpha", Args[0].Pointer);
+            return Self.SetIVar("@alpha", A);
         }
     }
 }
