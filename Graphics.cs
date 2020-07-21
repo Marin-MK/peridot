@@ -3,91 +3,68 @@ using rubydotnet;
 
 namespace peridot
 {
-    public class Graphics : Ruby.Object
+    public static class Graphics
     {
-        public new static string KlassName = "Graphics";
-        public static Ruby.Module Module;
+        public static IntPtr Module;
 
-        public static Viewport MainViewport;
-        public static Viewport OverlayViewport;
-        public static Sprite OverlaySprite;
-        public static Bitmap OverlayBitmap;
-
-        public Graphics(IntPtr Pointer) : base(Pointer) { }
+        public static IntPtr MainViewport;
+        public static IntPtr OverlayViewport;
+        public static IntPtr OverlaySprite;
+        public static IntPtr OverlayBitmap;
 
         public static void Create()
         {
-            Ruby.Module m = Ruby.Module.DefineModule<Graphics>(KlassName);
-            Module = m;
-            m.DefineClassMethod("frame_rate", frame_rateget);
-            m.DefineClassMethod("frame_rate=", frame_rateset);
-            m.DefineClassMethod("width", widthget);
-            m.DefineClassMethod("width=", widthset);
-            m.DefineClassMethod("height", heightget);
-            m.DefineClassMethod("height=", heightset);
-            m.DefineClassMethod("brightness", brightnessget);
-            m.DefineClassMethod("brightness=", brightnessset);
-            m.DefineClassMethod("frame_count", frame_countget);
-            m.DefineClassMethod("frame_count=", frame_countset);
-            m.DefineClassMethod("screenshot", screenshot);
-            m.DefineClassMethod("snap_to_bitmap", screenshot);
-            m.DefineClassMethod("update", update);
-            m.DefineClassMethod("wait", wait);
+            Module = Ruby.Module.Define("Graphics");
+            Ruby.Module.DefineClassMethod(Module, "frame_rate", frame_rateget);
+            Ruby.Module.DefineClassMethod(Module, "frame_rate=", frame_rateset);
+            Ruby.Module.DefineClassMethod(Module, "width", widthget);
+            Ruby.Module.DefineClassMethod(Module, "width=", widthset);
+            Ruby.Module.DefineClassMethod(Module, "height", heightget);
+            Ruby.Module.DefineClassMethod(Module, "height=", heightset);
+            Ruby.Module.DefineClassMethod(Module, "brightness", brightnessget);
+            Ruby.Module.DefineClassMethod(Module, "brightness=", brightnessset);
+            Ruby.Module.DefineClassMethod(Module, "frame_count", frame_countget);
+            Ruby.Module.DefineClassMethod(Module, "frame_count=", frame_countset);
+            Ruby.Module.DefineClassMethod(Module, "screenshot", screenshot);
+            Ruby.Module.DefineClassMethod(Module, "snap_to_bitmap", screenshot);
+            Ruby.Module.DefineClassMethod(Module, "update", update);
+            Ruby.Module.DefineClassMethod(Module, "wait", wait);
         }
 
         public static void Start()
         {
             odl.Viewport.DefaultWindow = Program.MainWindow;
-            MainViewport = Viewport.Class.AutoFuncall<Viewport>("new",
-                (Ruby.Integer) 0,
-                (Ruby.Integer) 0,
-                Module.GetIVar("@width"),
-                Module.GetIVar("@height")
-            );
-            MainViewport.Funcall("z=", (Ruby.Integer) 999999998);
+            MainViewport = Ruby.Funcall(Viewport.Class, "new", Ruby.Integer.ToPtr(0), Ruby.Integer.ToPtr(0), Ruby.GetIVar(Module, "@width"), Ruby.GetIVar(Module, "@height"));
+            Ruby.Funcall(MainViewport, "z=", Ruby.Integer.ToPtr(999999998));
 
-            Font.Class.SetIVar("@default_name", (Ruby.String) "arial");
-            Font.Class.SetIVar("@default_size", (Ruby.Integer) 32);
-            Font.Class.SetIVar("@default_color", Color.CreateColor(odl.Color.WHITE));
-            Font.Class.SetIVar("@default_outline", Ruby.False);
-            Font.Class.SetIVar("@default_outline_color", Color.CreateColor(odl.Color.BLACK));
+            Ruby.SetIVar(Font.Class, "@default_name", Ruby.String.ToPtr("arial"));
+            Ruby.SetIVar(Font.Class, "@default_size", Ruby.Integer.ToPtr(32));
+            Ruby.SetIVar(Font.Class, "@default_color", Color.CreateColor(odl.Color.WHITE));
+            Ruby.SetIVar(Font.Class, "@default_outline", Ruby.False);
+            Ruby.SetIVar(Font.Class, "@default_outline_color", Color.CreateColor(odl.Color.BLACK));
 
-            OverlayViewport = Viewport.Class.AutoFuncall<Viewport>("new",
-                (Ruby.Integer) 0,
-                (Ruby.Integer) 0,
-                Module.GetIVar("@width"),
-                Module.GetIVar("@height")
-            );
-            OverlayViewport.Funcall("z=", (Ruby.Integer) 999999999);
+            OverlayViewport = Ruby.Funcall(Viewport.Class, "new", Ruby.Integer.ToPtr(0), Ruby.Integer.ToPtr(0), Ruby.GetIVar(Module, "@width"), Ruby.GetIVar(Module, "@height"));
+            Ruby.Funcall(OverlayViewport, "z=", Ruby.Integer.ToPtr(999999999));
 
-            //Internal.SetGlobalVariable("$__overlay_viewport__", OverlayViewport);
+            Ruby.SetGlobal("$__overlay_viewport__", OverlayViewport);
 
-            OverlaySprite = Sprite.Class.AutoFuncall<Sprite>("new", OverlayViewport);
+            OverlaySprite = Ruby.Funcall(Sprite.Class, "new", OverlayViewport);
 
-            //Internal.SetGlobalVariable("$__overlay_sprite__", OverlaySprite);
+            Ruby.SetGlobal("$__overlay_sprite__", OverlaySprite);
 
-            OverlayBitmap = Bitmap.Class.AutoFuncall<Bitmap>("new",
-                Module.GetIVar("@width"),
-                Module.GetIVar("@height")
-            );
-            //Internal.SetGlobalVariable("$__overlay_bitmap__", OverlayBitmap);
+            OverlayBitmap = Ruby.Funcall(Bitmap.Class, "new", Ruby.GetIVar(Module, "@width"), Ruby.GetIVar(Module, "@height"));
+            Ruby.SetGlobal("$__overlay_bitmap__", OverlayBitmap);
 
-            OverlaySprite.Funcall("bitmap=", OverlayBitmap);
-            OverlaySprite.Funcall("opacity=", (Ruby.Integer) 0);
-            OverlaySprite.Funcall("z=", (Ruby.Integer) 999999999);
-            OverlayBitmap.Funcall("fill_rect",
-                (Ruby.Integer) 0,
-                (Ruby.Integer) 0,
-                Module.GetIVar("@width"),
-                Module.GetIVar("@height"),
-                Color.CreateColor(odl.Color.BLACK)
-            );
+            Ruby.Funcall(OverlaySprite, "bitmap=", OverlayBitmap);
+            Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(0));
+            Ruby.Funcall(OverlaySprite, "z=", Ruby.Integer.ToPtr(999999999));
+            Ruby.Funcall(OverlayBitmap, "fill_rect", Ruby.Integer.ToPtr(0), Ruby.Integer.ToPtr(0), Ruby.GetIVar(Module, "@width"), Ruby.GetIVar(Module, "@height"), Color.CreateColor(odl.Color.BLACK));
 
-            //Internal.SetGlobalVariable("$__mainvp__", MainViewport);
-            //Internal.SetGlobalVariable("$peridot", Internal.QTrue);
+            Ruby.SetGlobal("$__mainvp__", MainViewport);
+            Ruby.SetGlobal("$peridot", Ruby.True);
 
-            Module.SetIVar("@brightness", (Ruby.Integer) 255);
-            Module.SetIVar("@frame_count", (Ruby.Integer) 0);
+            Ruby.SetIVar(Module, "@brightness", Ruby.Integer.ToPtr(255));
+            Ruby.SetIVar(Module, "@frame_count", Ruby.Integer.ToPtr(0));
 
             int fps = Config.FrameRate;
             if (Config.VSync)
@@ -96,98 +73,100 @@ namespace peridot
                 SDL2.SDL.SDL_GetWindowDisplayMode(Program.MainWindow.SDL_Window, out mode);
                 fps = mode.refresh_rate;
             }
-            Module.SetIVar("@frame_rate", (Ruby.Integer) fps);
+            Ruby.SetIVar(Module, "@frame_rate", Ruby.Integer.ToPtr(fps));
         }
 
-        protected static Ruby.Object frame_rateget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr frame_rateget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@frame_rate");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@frame_rate");
         }
 
-        protected static Ruby.Object frame_rateset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr frame_rateset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            return Self.SetIVar("@frame_rate", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            return Ruby.SetIVar(Self, "@frame_rate", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object widthget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr widthget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@width");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@width");
         }
 
-        protected static Ruby.Object widthset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr widthset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            return Self.SetIVar("@width", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            return Ruby.SetIVar(Self, "@width", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object heightget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr heightget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@height");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@height");
         }
 
-        protected static Ruby.Object heightset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr heightset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            return Self.SetIVar("@height", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            return Ruby.SetIVar(Self, "@height", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object brightnessget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr brightnessget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@brightness");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@brightness");
         }
 
-        protected static Ruby.Object brightnessset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr brightnessset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Ruby.Object brightness = null;
-            if (Args[0].Is(Ruby.Float.Class))
+            Ruby.Array.Expect(Args, 1);
+            IntPtr brightness = IntPtr.Zero;
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args.Get<Ruby.Float>(0) < 0) brightness = (Ruby.Float) 0;
-                else if (Args.Get<Ruby.Float>(0) > 255) brightness = (Ruby.Float) 255;
-                else brightness = Args.Get<Ruby.Float>(0);
-                OverlaySprite.Funcall("opacity=", (Ruby.Integer) Math.Round((Ruby.Integer) 255 - (Ruby.Float) brightness));
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < 0) brightness = Ruby.Float.ToPtr(0);
+                else if (v > 255) brightness = Ruby.Float.ToPtr(255);
+                else brightness = Ruby.Array.Get(Args, 0);
+                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr((int) Math.Round(255 - v)));
             }
             else
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                if (Args.Get<Ruby.Integer>(0) < 0) brightness = (Ruby.Integer) 0;
-                else if (Args.Get<Ruby.Integer>(0) > 255) brightness = (Ruby.Integer) 255;
-                else brightness = Args.Get<Ruby.Integer>(0);
-                OverlaySprite.Funcall("opacity=", (Ruby.Integer) 255 - (Ruby.Integer) brightness);
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < 0) brightness = Ruby.Integer.ToPtr(0);
+                else if (v > 255) brightness = Ruby.Integer.ToPtr(255);
+                else brightness = Ruby.Array.Get(Args, 0);
+                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(255 - v));
             }
-            return Self.SetIVar("@brightness", brightness);
+            return Ruby.SetIVar(Self, "@brightness", brightness);
         }
 
-        protected static Ruby.Object frame_countget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr frame_countget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@frame_count");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@frame_count");
         }
 
-        protected static Ruby.Object frame_countset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr frame_countset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            return Self.SetIVar("@frame_count", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            return Ruby.SetIVar(Self, "@frame_count", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object screenshot(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr screenshot(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
+            Ruby.Array.Expect(Args, 0);
             return Bitmap.CreateBitmap(odl.Graphics.Windows[0].Screenshot());
         }
 
-        protected static Ruby.Object update(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr update(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
+            Ruby.Array.Expect(Args, 0);
             if (!odl.Graphics.Initialized) Ruby.Raise(Ruby.ErrorType.SystemExit, "game stopped");
 
             odl.Graphics.UpdateInput();
@@ -203,11 +182,11 @@ namespace peridot
             return Ruby.True;
         }
 
-        protected static Ruby.Object wait(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr wait(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            SDL2.SDL.SDL_Delay((uint) (1000d / Self.AutoGetIVar<Ruby.Integer>("@frame_rate") * Args.Get<Ruby.Integer>(0)));
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            SDL2.SDL.SDL_Delay((uint) (1000d / Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@frame_rate")) * Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0))));
             return Ruby.True;
         }
     }

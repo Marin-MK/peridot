@@ -3,282 +3,261 @@ using rubydotnet;
 
 namespace peridot
 {
-    public class Tone : Ruby.Object
+    public static class Tone
     {
-        public new static string KlassName = "Tone";
-        public new static Ruby.Class Class;
-
-        public Tone(IntPtr Pointer) : base(Pointer) { }
+        public static IntPtr Class;
 
         public static void Create()
         {
-            Ruby.Class c = Ruby.Class.DefineClass<Tone>(KlassName);
-            Class = c;
-            c.DefineMethod("initialize", initialize);
-            c.DefineMethod("red", redget);
-            c.DefineMethod("red=", redset);
-            c.DefineMethod("green", greenget);
-            c.DefineMethod("green=", greenset);
-            c.DefineMethod("blue", blueget);
-            c.DefineMethod("blue=", blueset);
-            c.DefineMethod("grey", greyget);
-            c.DefineMethod("grey=", greyset);
+            Class = Ruby.Class.Define("Tone");
+            Ruby.Class.DefineMethod(Class, "initialize", initialize);
+            Ruby.Class.DefineMethod(Class, "red", redget);
+            Ruby.Class.DefineMethod(Class, "red=", redset);
+            Ruby.Class.DefineMethod(Class, "green", greenget);
+            Ruby.Class.DefineMethod(Class, "green=", greenset);
+            Ruby.Class.DefineMethod(Class, "blue", blueget);
+            Ruby.Class.DefineMethod(Class, "blue=", blueset);
+            Ruby.Class.DefineMethod(Class, "grey", greyget);
+            Ruby.Class.DefineMethod(Class, "grey=", greyset);
         }
 
-        public static odl.Tone CreateTone(Ruby.Object Self)
+        public static odl.Tone CreateTone(IntPtr Self)
         {
             short R = 0,
                   G = 0,
                   B = 0;
             byte Grey = 0;
-            if (Self.Is(Ruby.Float.Class))
-            {
-                R = (short) Math.Round(Self.AutoGetIVar<Ruby.Float>("@red"));
-            }
-            else
-            {
-                R = (short) Self.AutoGetIVar<Ruby.Integer>("@red");
-            }
-            if (Self.Is(Ruby.Float.Class))
-            {
-                G = (short) Math.Round(Self.AutoGetIVar<Ruby.Float>("@green"));
-            }
-            else
-            {
-                G = (short) Self.AutoGetIVar<Ruby.Integer>("@green");
-            }
-            if (Self.Is(Ruby.Float.Class))
-            {
-                B = (short) Math.Round(Self.AutoGetIVar<Ruby.Float>("@blue"));
-            }
-            else
-            {
-                B = (short) Self.AutoGetIVar<Ruby.Integer>("@blue");
-            }
-            if (Self.Is(Ruby.Float.Class))
-            {
-                Grey = (byte) Math.Round(Self.AutoGetIVar<Ruby.Float>("@grey"));
-            }
-            else
-            {
-                Grey = (byte) Self.AutoGetIVar<Ruby.Integer>("@grey");
-            }
+            if (Ruby.IVarIs(Self, "@red", "Float")) R = (short) Ruby.Float.RoundFromPtr(Ruby.GetIVar(Self, "@red"));
+            else R = (short) Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@red"));
+            if (Ruby.IVarIs(Self, "@green", "Float")) G = (short) Ruby.Float.RoundFromPtr(Ruby.GetIVar(Self, "@green"));
+            else G = (short) Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@green"));
+            if (Ruby.IVarIs(Self, "@blue", "Float")) B = (short) Ruby.Float.RoundFromPtr(Ruby.GetIVar(Self, "@blue"));
+            else B = (short) Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@blue"));
+            if (Ruby.IVarIs(Self, "@grey", "Float")) Grey = (byte) Ruby.Float.RoundFromPtr(Ruby.GetIVar(Self, "@grey"));
+            else Grey = (byte) Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@grey"));
             return new odl.Tone(R, G, B, Grey);
         }
 
-        public static Tone CreateTone(odl.Tone Tone)
+        public static IntPtr CreateTone(odl.Tone Tone)
         {
-            return Class.AutoFuncall<Tone>("new",
-                (Ruby.Integer) Tone.Red,
-                (Ruby.Integer) Tone.Green,
-                (Ruby.Integer) Tone.Blue,
-                (Ruby.Integer) Tone.Gray
-            );
+            return Ruby.Funcall(Class, "new", Ruby.Integer.ToPtr(Tone.Red), Ruby.Integer.ToPtr(Tone.Green), Ruby.Integer.ToPtr(Tone.Blue), Ruby.Integer.ToPtr(Tone.Gray));
         }
 
-        protected static Ruby.Object initialize(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr initialize(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(3, 4);
-            Ruby.Object R = (Ruby.Integer) 0,
-                        G = (Ruby.Integer) 0,
-                        B = (Ruby.Integer) 0,
-                        Grey = (Ruby.Integer) 0;
-            if (Args.Length == 3 || Args.Length == 4)
+            Ruby.Array.Expect(Args, 3, 4);
+            IntPtr R = Ruby.Integer.ToPtr(0),
+                   G = R,
+                   B = R,
+                   Grey = R;
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args[0].Is(Ruby.Float.Class))
-                {
-                    if (Args.Get<Ruby.Float>(0) < -255) R = (Ruby.Float) (-255);
-                    else if (Args.Get<Ruby.Float>(0) > 255) R = (Ruby.Float) 255;
-                    else R = Args[0];
-                }
-                else
-                {
-                    Args[0].Expect(Ruby.Integer.Class);
-                    if (Args.Get<Ruby.Integer>(0) < -255) R = (Ruby.Integer) (-255);
-                    else if (Args.Get<Ruby.Integer>(0) > 255) R = (Ruby.Integer) 255;
-                    else R = Args[0];
-                }
-                if (Args[1].Is(Ruby.Float.Class))
-                {
-                    if (Args.Get<Ruby.Float>(1) < -255) G = (Ruby.Float) (-255);
-                    else if (Args.Get<Ruby.Float>(1) > 255) G = (Ruby.Float) 255;
-                    else G = Args[1];
-                }
-                else
-                {
-                    Args[1].Expect(Ruby.Integer.Class);
-                    if (Args.Get<Ruby.Integer>(1) < -255) G = (Ruby.Integer) (-255);
-                    else if (Args.Get<Ruby.Integer>(1) > 255) G = (Ruby.Integer) 255;
-                    else G = Args[1];
-                }
-                if (Args[2].Is(Ruby.Float.Class))
-                {
-                    if (Args.Get<Ruby.Float>(2) < -255) B = (Ruby.Float) (-255);
-                    else if (Args.Get<Ruby.Float>(2) > 255) B = (Ruby.Float) 255;
-                    else B = Args[2];
-                }
-                else
-                {
-                    Args[2].Expect(Ruby.Integer.Class);
-                    if (Args.Get<Ruby.Integer>(2) < -255) B = (Ruby.Integer) (-255);
-                    else if (Args.Get<Ruby.Integer>(2) > 255) B = (Ruby.Integer) 255;
-                    else B = Args[2];
-                }
-                if (Args.Length == 4)
-                {
-                    if (Args[3].Is(Ruby.Float.Class))
-                    {
-                        if (Args.Get<Ruby.Float>(3) < -255) R = (Ruby.Float) (-255);
-                        else if (Args.Get<Ruby.Float>(3) > 255) R = (Ruby.Float) 255;
-                        else Grey = Args[3];
-                    }
-                    else
-                    {
-                        Args[3].Expect(Ruby.Integer.Class);
-                        if (Args.Get<Ruby.Integer>(3) < -255) Grey = (Ruby.Integer) (-255);
-                        else if (Args.Get<Ruby.Integer>(3) > 255) Grey = (Ruby.Integer) 255;
-                        else Grey = Args[3];
-                    }
-                }
-                else Grey = (Ruby.Integer) 0;
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) R = Ruby.Float.ToPtr(-255);
+                else if (v > 255) R = Ruby.Float.ToPtr(255);
+                else R = Ruby.Array.Get(Args, 0);
             }
-            Self.SetIVar("@red", R);
-            Self.SetIVar("@green", G);
-            Self.SetIVar("@blue", B);
-            Self.SetIVar("@grey", Grey);
+            else
+            {
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) R = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) R = Ruby.Integer.ToPtr(255);
+                else R = Ruby.Array.Get(Args, 0);
+            }
+            if (Ruby.Array.Is(Args, 1, "Float"))
+            {
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 1));
+                if (v < -255) G = Ruby.Float.ToPtr(-255);
+                else if (v > 255) G = Ruby.Float.ToPtr(255);
+                else G = Ruby.Array.Get(Args, 1);
+            }
+            else
+            {
+                Ruby.Array.Expect(Args, 1, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                if (v < -255) G = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) G = Ruby.Integer.ToPtr(255);
+                else G = Ruby.Array.Get(Args, 1);
+            }
+            if (Ruby.Array.Is(Args, 2, "Float"))
+            {
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 2));
+                if (v < -255) B = Ruby.Float.ToPtr(-255);
+                else if (v > 255) B = Ruby.Float.ToPtr(255);
+                else B = Ruby.Array.Get(Args, 2);
+            }
+            else
+            {
+                Ruby.Array.Expect(Args, 2, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                if (v < -255) B = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) B = Ruby.Integer.ToPtr(255);
+                else B = Ruby.Array.Get(Args, 2);
+            }
+            if (Ruby.Array.Length(Args) == 4)
+            {
+                if (Ruby.Array.Is(Args, 3, "Float"))
+                {
+                    double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 3));
+                    if (v < -255) Grey = Ruby.Float.ToPtr(-255);
+                    else if (v > 255) Grey = Ruby.Float.ToPtr(255);
+                    else Grey = Ruby.Array.Get(Args, 3);
+                }
+                else
+                {
+                    Ruby.Array.Expect(Args, 3, "Integer");
+                    int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                    if (v < 0) Grey = Ruby.Integer.ToPtr(0);
+                    else if (v > 255) Grey = Ruby.Integer.ToPtr(255);
+                    else Grey = Ruby.Array.Get(Args, 3);
+                }
+            }
+            Ruby.SetIVar(Self, "@red", R);
+            Ruby.SetIVar(Self, "@green", G);
+            Ruby.SetIVar(Self, "@blue", B);
+            Ruby.SetIVar(Self, "@grey", Grey);
             return Self;
         }
 
-        protected static Ruby.Object redget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr redget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@red");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@red");
         }
 
-        protected static Ruby.Object redset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr redset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Ruby.Object R = (Ruby.Integer) 0;
+            Ruby.Array.Expect(Args, 1);
+            IntPtr R = Ruby.Integer.ToPtr(0);
             short realr = 0;
-            if (Args[0].Is(Ruby.Float.Class))
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args.Get<Ruby.Float>(0) < -255) R = (Ruby.Float) (-255);
-                else if (Args.Get<Ruby.Float>(0) > 255) R = (Ruby.Float) 255;
-                else R = Args.Get<Ruby.Float>(0);
-                realr = (short) Math.Round((Ruby.Float) R);
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) R = Ruby.Float.ToPtr(-255);
+                else if (v > 255) R = Ruby.Float.ToPtr(255);
+                else R = Ruby.Array.Get(Args, 0);
+                realr = (short) Math.Round(v);
             }
             else
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                if (Args.Get<Ruby.Integer>(0) < -255) R = (Ruby.Integer) (-255);
-                else if (Args.Get<Ruby.Integer>(0) > 255) R = (Ruby.Integer) 255;
-                else R = Args.Get<Ruby.Integer>(0);
-                realr = (short) (Ruby.Integer) R;
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) R = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) R = Ruby.Integer.ToPtr(255);
+                else R = Ruby.Array.Get(Args, 0);
+                realr = (short) v;
             }
-            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
+            if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Tone.Red = realr;
+                Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].Tone.Red = realr;
             }
-            return Self.SetIVar("@red", R);
+            return Ruby.SetIVar(Self, "@red", R);
         }
 
-        protected static Ruby.Object greenget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr greenget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@green");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@green");
         }
 
-        protected static Ruby.Object greenset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr greenset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Ruby.Object G = (Ruby.Integer) 0;
+            Ruby.Array.Expect(Args, 1);
+            IntPtr G = Ruby.Integer.ToPtr(0);
             short realg = 0;
-            if (Args[0].Is(Ruby.Float.Class))
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args.Get<Ruby.Float>(0) < -255) G = (Ruby.Float) (-255);
-                else if (Args.Get<Ruby.Float>(0) > 255) G = (Ruby.Float) 255;
-                else G = Args.Get<Ruby.Float>(0);
-                realg = (short) Math.Round((Ruby.Float) G);
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) G = Ruby.Float.ToPtr(-255);
+                else if (v > 255) G = Ruby.Float.ToPtr(255);
+                else G = Ruby.Array.Get(Args, 0);
+                realg = (short) Math.Round(v);
             }
             else
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                if (Args.Get<Ruby.Integer>(0) < -255) G = (Ruby.Integer) (-255);
-                else if (Args.Get<Ruby.Integer>(0) > 255) G = (Ruby.Integer) 255;
-                else G = Args.Get<Ruby.Integer>(0);
-                realg = (short) (Ruby.Integer) G;
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) G = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) G = Ruby.Integer.ToPtr(255);
+                else G = Ruby.Array.Get(Args, 0);
+                realg = (short) v;
             }
-            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
+            if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Tone.Green = realg;
+                Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].Tone.Green = realg;
             }
-            return Self.SetIVar("@green", G);
+            return Ruby.SetIVar(Self, "@green", G);
         }
 
-        protected static Ruby.Object blueget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr blueget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@blue");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@blue");
         }
 
-        protected static Ruby.Object blueset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr blueset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Ruby.Object B = (Ruby.Integer) 0;
+            Ruby.Array.Expect(Args, 1);
+            IntPtr B = Ruby.Integer.ToPtr(0);
             short realb = 0;
-            if (Args[0].Is(Ruby.Float.Class))
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args.Get<Ruby.Float>(0) < -255) B = (Ruby.Float) (-255);
-                else if (Args.Get<Ruby.Float>(0) > 255) B = (Ruby.Float) 255;
-                else B = Args.Get<Ruby.Float>(0);
-                realb = (short) Math.Round((Ruby.Float) B);
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) B = Ruby.Float.ToPtr(-255);
+                else if (v > 255) B = Ruby.Float.ToPtr(255);
+                else B = Ruby.Array.Get(Args, 0);
+                realb = (short) Math.Round(v);
             }
             else
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                if (Args.Get<Ruby.Integer>(0) < -255) B = (Ruby.Integer) (-255);
-                else if (Args.Get<Ruby.Integer>(0) > 255) B = (Ruby.Integer) 255;
-                else B = Args.Get<Ruby.Integer>(0);
-                realb = (short) (Ruby.Integer) B;
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < -255) B = Ruby.Integer.ToPtr(-255);
+                else if (v > 255) B = Ruby.Integer.ToPtr(255);
+                else B = Ruby.Array.Get(Args, 0);
+                realb = (short) v;
             }
-            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
+            if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Tone.Blue = realb;
+                Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].Tone.Blue = realb;
             }
-            return Self.SetIVar("@blue", B);
+            return Ruby.SetIVar(Self, "@blue", B);
         }
 
-        protected static Ruby.Object greyget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr greyget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@grey");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@grey");
         }
 
-        protected static Ruby.Object greyset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr greyset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Ruby.Object Grey = (Ruby.Integer) 0;
+            Ruby.Array.Expect(Args, 1);
+            IntPtr Grey = Ruby.Integer.ToPtr(0);
             byte realgrey = 0;
-            if (Args[0].Is(Ruby.Float.Class))
+            if (Ruby.Array.Is(Args, 0, "Float"))
             {
-                if (Args.Get<Ruby.Float>(0) < -255) Grey = (Ruby.Float) (-255);
-                else if (Args.Get<Ruby.Float>(0) > 255) Grey = (Ruby.Float) 255;
-                else Grey = Args.Get<Ruby.Float>(0);
-                realgrey = (byte) Math.Round((Ruby.Float) Grey);
+                double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < 0) Grey = Ruby.Float.ToPtr(0);
+                else if (v > 255) Grey = Ruby.Float.ToPtr(255);
+                else Grey = Ruby.Array.Get(Args, 0);
+                realgrey = (byte) Math.Round(v);
             }
             else
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                if (Args.Get<Ruby.Integer>(0) < -255) Grey = (Ruby.Integer) (-255);
-                else if (Args.Get<Ruby.Integer>(0) > 255) Grey = (Ruby.Integer) 255;
-                else Grey = Args.Get<Ruby.Integer>(0);
-                realgrey = (byte) (Ruby.Integer) Grey;
+                Ruby.Array.Expect(Args, 0, "Integer");
+                int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                if (v < 0) Grey = Ruby.Integer.ToPtr(0);
+                else if (v > 255) Grey = Ruby.Integer.ToPtr(255);
+                else Grey = Ruby.Array.Get(Args, 0);
+                realgrey = (byte) v;
             }
-            if (Self.GetIVar("@__sprite__") != Ruby.Nil)
+            if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
-                Sprite.SpriteDictionary[Self.RawGetIVar("@__sprite__")].Tone.Gray = realgrey;
+                Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].Tone.Gray = realgrey;
             }
-            return Self.SetIVar("@grey", Grey);
+            return Ruby.SetIVar(Self, "@grey", Grey);
         }
     }
 }

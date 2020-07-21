@@ -2,397 +2,407 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
 using Microsoft.VisualBasic.CompilerServices;
 using rubydotnet;
 
 namespace peridot
 {
-    public class Bitmap : Ruby.Object
+    public static class Bitmap
     {
-        public new static string KlassName = "Bitmap";
-        public new static Ruby.Class Class;
+        public static IntPtr Class;
         public static Dictionary<IntPtr, odl.Bitmap> BitmapDictionary = new Dictionary<IntPtr, odl.Bitmap>();
-
-        public Bitmap(IntPtr Pointer) : base(Pointer) { }
 
         public static void Create()
         {
-            Ruby.Class c = Ruby.Class.DefineClass<Bitmap>(KlassName);
-            Class = c;
-            c.DefineClassMethod("mask", mask);
-            c.DefineMethod("initialize", initialize);
-            c.DefineMethod("width", widthget);
-            c.DefineMethod("height", heightget);
-            c.DefineMethod("font", fontget);
-            c.DefineMethod("font=", fontset);
-            c.DefineMethod("autolock", autolockget);
-            c.DefineMethod("autolock=", autolockset);
-            c.DefineMethod("unlock", unlockbmp);
-            c.DefineMethod("lock", lockbmp);
-            c.DefineMethod("locked?", locked);
-            c.DefineMethod("get_pixel", get_pixel);
-            c.DefineMethod("set_pixel", set_pixel);
-            c.DefineMethod("draw_line", draw_line);
-            c.DefineMethod("draw_rect", draw_rect);
-            c.DefineMethod("fill_rect", fill_rect);
-            c.DefineMethod("blt", blt);
-            c.DefineMethod("text_size", text_size);
-            c.DefineMethod("draw_text", draw_text);
-            c.DefineMethod("clear", clear);
-            c.DefineMethod("dispose", dispose);
-            c.DefineMethod("disposed?", disposed);
+            Class = Ruby.Class.Define("Bitmap");
+            Ruby.Class.DefineClassMethod(Class, "mask", mask);
+            Ruby.Class.DefineMethod(Class, "initialize", initialize);
+            Ruby.Class.DefineMethod(Class, "width", widthget);
+            Ruby.Class.DefineMethod(Class, "height", heightget);
+            Ruby.Class.DefineMethod(Class, "font", fontget);
+            Ruby.Class.DefineMethod(Class, "font=", fontset);
+            Ruby.Class.DefineMethod(Class, "autolock", autolockget);
+            Ruby.Class.DefineMethod(Class, "autolock=", autolockset);
+            Ruby.Class.DefineMethod(Class, "unlock", unlockbmp);
+            Ruby.Class.DefineMethod(Class, "lock", lockbmp);
+            Ruby.Class.DefineMethod(Class, "locked?", locked);
+            Ruby.Class.DefineMethod(Class, "get_pixel", get_pixel);
+            Ruby.Class.DefineMethod(Class, "set_pixel", set_pixel);
+            Ruby.Class.DefineMethod(Class, "draw_line", draw_line);
+            Ruby.Class.DefineMethod(Class, "draw_rect", draw_rect);
+            Ruby.Class.DefineMethod(Class, "fill_rect", fill_rect);
+            Ruby.Class.DefineMethod(Class, "blt", blt);
+            Ruby.Class.DefineMethod(Class, "text_size", text_size);
+            Ruby.Class.DefineMethod(Class, "draw_text", draw_text);
+            Ruby.Class.DefineMethod(Class, "clear", clear);
+            Ruby.Class.DefineMethod(Class, "dispose", dispose);
+            Ruby.Class.DefineMethod(Class, "disposed?", disposed);
         }
 
-        public static Bitmap CreateBitmap(odl.Bitmap Bitmap)
+        public static IntPtr CreateBitmap(odl.Bitmap Bitmap)
         {
-            Bitmap bmp = Class.Allocate().Convert<Bitmap>();
-            bmp.SetIVar("@width", (Ruby.Integer) Bitmap.Width);
-            bmp.SetIVar("@height", (Ruby.Integer) Bitmap.Height);
-            bmp.SetIVar("@autolock", Ruby.True);
-            bmp.SetIVar("@font", Font.CreateFont());
-            if (BitmapDictionary.ContainsKey(bmp.Pointer))
+            IntPtr bmp = Ruby.Class.Allocate(Class);
+            Ruby.SetIVar(bmp, "@width", Ruby.Integer.ToPtr(Bitmap.Width));
+            Ruby.SetIVar(bmp, "@height", Ruby.Integer.ToPtr(Bitmap.Height));
+            Ruby.SetIVar(bmp, "@autolock", Ruby.True);
+            Ruby.SetIVar(bmp, "@font", Font.CreateFont());
+            if (BitmapDictionary.ContainsKey(bmp))
             {
-                BitmapDictionary[bmp.Pointer].Dispose();
-                BitmapDictionary.Remove(bmp.Pointer);
+                BitmapDictionary[bmp].Dispose();
+                BitmapDictionary.Remove(bmp);
             }
-            BitmapDictionary.Add(bmp.Pointer, Bitmap);
+            BitmapDictionary.Add(bmp, Bitmap);
             return bmp;
         }
 
-        protected static Ruby.Object initialize(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr initialize(IntPtr Self, IntPtr Args)
         {
-            Args.Expect((0, 5));
+            Ruby.Array.Expect(Args, 1, 2, 3, 4);
             odl.Bitmap bmp = null;
-            if (Args.Length == 1)
+            long len = Ruby.Array.Length(Args);
+            if (len == 1)
             {
-                if (Args[0].Is(Bitmap.Class))
+                if (Ruby.Array.Is(Args, 0, "Bitmap"))
                 {
-                    bmp = BitmapDictionary[Args[0].Pointer];
+                    bmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
                 }
                 else
                 {
-                    Args[0].Expect(Ruby.String.Class);
-                    bmp = new odl.Bitmap(Args.Get<Ruby.String>(0));
+                    Ruby.Array.Expect(Args, 0, "String");
+                    bmp = new odl.Bitmap(Ruby.String.FromPtr(Ruby.Array.Get(Args, 0)));
                 }
             }
-            else if (Args.Length == 2)
+            else if (len == 2)
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                bmp = new odl.Bitmap(Args.Get<Ruby.Integer>(0), Args.Get<Ruby.Integer>(1));
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                bmp = new odl.Bitmap((int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0)), (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1)));
             }
-            else if (Args.Length == 3 || Args.Length == 4)
+            else if (len == 3 || len == 4)
             {
-                Args[0].Expect(Ruby.Array.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                if (Args.Length == 4) Args[3].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class);
-                Ruby.Array pixelarray = Args.Get<Ruby.Array>(0);
-                byte[] bytearray = new byte[pixelarray.Length];
-                bool validate = Args.Length == 3 || Args[3] == Ruby.True;
-                for (int i = 0; i < pixelarray.Length; i++)
+                Ruby.Array.Expect(Args, 0, "Array");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                if (len == 4) Ruby.Array.Expect(Args, 3, "TrueClass", "FalseClass");
+                IntPtr pixelarray = Ruby.Array.Get(Args, 0);
+                long pixellen = Ruby.Array.Length(pixelarray);
+                byte[] bytearray = new byte[pixellen];
+                bool validate = len == 3 || Ruby.Array.Get(Args, 3) == Ruby.True;
+                for (int i = 0; i < pixellen; i++)
                 {
-                    if (validate) pixelarray[i].Expect(Ruby.Integer.Class);
-                    bytearray[i] = (byte) pixelarray[i].Convert<Ruby.Integer>();
+                    if (validate) Ruby.Array.Expect(pixelarray, i, "Integer");
+                    bytearray[i] = (byte) Ruby.Integer.FromPtr(Ruby.Array.Get(pixelarray, i));
                 }
-                int width = Args.Get<Ruby.Integer>(1);
-                int height = Args.Get<Ruby.Integer>(2);
+                int width = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                int height = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
                 bmp = new odl.Bitmap(bytearray, width, height);
             }
-            Self.SetIVar("@width", (Ruby.Integer) bmp.Width);
-            Self.SetIVar("@height", (Ruby.Integer) bmp.Height);
-            Self.SetIVar("@autolock", Ruby.True);
-            Self.SetIVar("@font", Font.CreateFont());
+            Ruby.SetIVar(Self, "@width", Ruby.Integer.ToPtr(bmp.Width));
+            Ruby.SetIVar(Self, "@height", Ruby.Integer.ToPtr(bmp.Height));
+            Ruby.SetIVar(Self, "@autolock", Ruby.True);
+            Ruby.SetIVar(Self, "@font", Font.CreateFont());
 
-            if (BitmapDictionary.ContainsKey(Self.Pointer))
+            if (BitmapDictionary.ContainsKey(Self))
             {
-                BitmapDictionary[Self.Pointer].Dispose();
-                BitmapDictionary.Remove(Self.Pointer);
+                BitmapDictionary[Self].Dispose();
+                BitmapDictionary.Remove(Self);
             }
-            BitmapDictionary.Add(Self.Pointer, bmp);
+            BitmapDictionary.Add(Self, bmp);
             return Self;
         }
 
-        protected static Ruby.Object AutoUnlock(Ruby.Object Self)
+        static IntPtr AutoUnlock(IntPtr Self)
         {
-            if (Self.GetIVar("@autolock") == Ruby.True)
+            if (Ruby.GetIVar(Self, "@autolock") == Ruby.True)
             {
-                BitmapDictionary[Self.Pointer].Unlock();
+                BitmapDictionary[Self].Unlock();
                 return Ruby.True;
             }
-            else if (BitmapDictionary[Self.Pointer].Locked)
+            else if (BitmapDictionary[Self].Locked)
             {
                 Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap locked for writing");
             }
             return Ruby.True;
         }
 
-        protected static Ruby.Object AutoLock(Ruby.Object Self)
+        static IntPtr AutoLock(IntPtr Self)
         {
-            if (Self.GetIVar("@autolock") == Ruby.True)
+            if (Ruby.GetIVar(Self, "@autolock") == Ruby.True)
             {
-                BitmapDictionary[Self.Pointer].Lock();
+                BitmapDictionary[Self].Lock();
                 return Ruby.True;
             }
             return Ruby.True;
         }
 
-        protected static Ruby.Object mask(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr mask(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(2, 3, 4, 5);
+            Ruby.Array.Expect(Args, 2, 3, 4, 5);
             odl.Bitmap result = null;
-            if (Args.Length == 2)
+            long len = Ruby.Array.Length(Args);
+            if (len == 2)
             {
-                Args[0].Expect(Bitmap.Class);
-                Args[1].Expect(Bitmap.Class);
-                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
-                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
+                Ruby.Array.Expect(Args, 0, "Bitmap");
+                Ruby.Array.Expect(Args, 1, "Bitmap");
+                GuardDisposed(Ruby.Array.Get(Args, 0));
+                GuardDisposed(Ruby.Array.Get(Args, 1));
+                odl.Bitmap maskbmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
+                odl.Bitmap srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 1)];
                 result = odl.Bitmap.Mask(maskbmp, srcbmp);
             }
-            else if (Args.Length == 3)
+            else if (len == 3)
             {
-                Args[0].Expect(Bitmap.Class);
-                Args[1].Expect(Bitmap.Class);
-                Args[2].Expect(Rect.Class);
-                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
-                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
-                odl.Rect srcrect = Rect.CreateRect(Args[2]);
+                Ruby.Array.Expect(Args, 0, "Bitmap");
+                Ruby.Array.Expect(Args, 1, "Bitmap");
+                Ruby.Array.Expect(Args, 2, "Rect");
+                GuardDisposed(Ruby.Array.Get(Args, 0));
+                GuardDisposed(Ruby.Array.Get(Args, 1));
+                odl.Bitmap maskbmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
+                odl.Bitmap srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 1)];
+                odl.Rect srcrect = Rect.CreateRect(Ruby.Array.Get(Args, 2));
                 result = odl.Bitmap.Mask(maskbmp, srcbmp, srcrect);
             }
-            else if (Args.Length == 4)
+            else if (len == 4)
             {
-                Args[0].Expect(Bitmap.Class);
-                Args[1].Expect(Bitmap.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
-                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
-                int offsetx = Args.Get<Ruby.Integer>(2);
-                int offsety = Args.Get<Ruby.Integer>(3);
+                Ruby.Array.Expect(Args, 0, "Bitmap");
+                Ruby.Array.Expect(Args, 1, "Bitmap");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                GuardDisposed(Ruby.Array.Get(Args, 0));
+                GuardDisposed(Ruby.Array.Get(Args, 1));
+                odl.Bitmap maskbmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
+                odl.Bitmap srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 1)];
+                int offsetx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                int offsety = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
                 result = odl.Bitmap.Mask(maskbmp, srcbmp, offsetx, offsety);
             }
-            else if (Args.Length == 5)
+            else if (len == 5)
             {
-                Args[0].Expect(Bitmap.Class);
-                Args[1].Expect(Bitmap.Class);
-                Args[2].Expect(Rect.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                Args[4].Expect(Ruby.Integer.Class);
-                odl.Bitmap maskbmp = BitmapDictionary[Args[0].Pointer];
-                odl.Bitmap srcbmp = BitmapDictionary[Args[1].Pointer];
-                odl.Rect srcrect = Rect.CreateRect(Args[2]);
-                int offsetx = Args.Get<Ruby.Integer>(3);
-                int offsety = Args.Get<Ruby.Integer>(4);
+                Ruby.Array.Expect(Args, 0, "Bitmap");
+                Ruby.Array.Expect(Args, 1, "Bitmap");
+                Ruby.Array.Expect(Args, 2, "Rect");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                Ruby.Array.Expect(Args, 4, "Integer");
+                GuardDisposed(Ruby.Array.Get(Args, 0));
+                GuardDisposed(Ruby.Array.Get(Args, 1));
+                odl.Bitmap maskbmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
+                odl.Bitmap srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 1)];
+                odl.Rect srcrect = Rect.CreateRect(Ruby.Array.Get(Args, 2));
+                int offsetx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                int offsety = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 4));
                 result = odl.Bitmap.Mask(maskbmp, srcbmp, srcrect, offsetx, offsety);
             }
             return Bitmap.CreateBitmap(result);
         }
 
-        protected static Ruby.Object widthget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr widthget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            return Self.GetIVar("@width");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@width");
         }
 
-        protected static Ruby.Object heightget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr heightget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            return Self.GetIVar("@height");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@height");
         }
 
-        protected static Ruby.Object fontget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr fontget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            return Self.GetIVar("@font");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@font");
         }
 
-        protected static Ruby.Object fontset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr fontset(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(1);
-            Args[0].Expect(Font.Class);
-            return Self.SetIVar("@font", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Font");
+            return Ruby.SetIVar(Self, "@font", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object autolockget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr autolockget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            return Self.GetIVar("@autolock");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@autolock");
         }
 
-        protected static Ruby.Object autolockset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr autolockset(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(1);
-            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
-            return Self.SetIVar("@autolock", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass", "NilClass");
+            return Ruby.SetIVar(Self, "@autolock", Ruby.Array.Get(Args, 0) == Ruby.True ? Ruby.True : Ruby.False);
         }
 
-        protected static Ruby.Object unlockbmp(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr unlockbmp(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            if (Self.GetIVar("@autolock") == Ruby.True) Ruby.Raise(Ruby.ErrorType.RuntimeError, "manual unlocking disallowed while autolock is enabled");
-            else if (!BitmapDictionary[Self.Pointer].Locked) Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap already unlocked");
-            BitmapDictionary[Self.Pointer].Unlock();
+            Ruby.Array.Expect(Args, 0);
+            if (Ruby.GetIVar(Self, "@autolock") == Ruby.True) Ruby.Raise(Ruby.ErrorType.RuntimeError, "manual unlocking disallowed while autolock is enabled");
+            else if (!BitmapDictionary[Self].Locked) Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap already unlocked");
+            BitmapDictionary[Self].Unlock();
             return Ruby.True;
         }
 
-        protected static Ruby.Object lockbmp(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr lockbmp(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            if (Self.GetIVar("@autolock") == Ruby.True) Ruby.Raise(Ruby.ErrorType.RuntimeError, "manual locking disallowed with autolock enabled");
-            else if (BitmapDictionary[Self.Pointer].Locked) Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap already locked");
-            BitmapDictionary[Self.Pointer].Lock();
+            Ruby.Array.Expect(Args, 0);
+            if (Ruby.GetIVar(Self, "@autolock") == Ruby.True) Ruby.Raise(Ruby.ErrorType.RuntimeError, "manual locking disallowed with autolock enabled");
+            else if (BitmapDictionary[Self].Locked) Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap already locked");
+            BitmapDictionary[Self].Lock();
             return Ruby.True;
         }
 
-        protected static Ruby.Object locked(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr locked(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            return BitmapDictionary[Self.Pointer].Locked ? (Ruby.Object) Ruby.True : Ruby.False;
+            Ruby.Array.Expect(Args, 0);
+            return BitmapDictionary[Self].Locked ? Ruby.True : Ruby.False;
         }
 
-        protected static Ruby.Object get_pixel(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr get_pixel(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(2);
-            Args[0].Expect(Ruby.Integer.Class);
-            Args[1].Expect(Ruby.Integer.Class);
-            int X = Args.Get<Ruby.Integer>(0);
-            int Y = Args.Get<Ruby.Integer>(1);
-            return Color.CreateColor(BitmapDictionary[Self.Pointer].GetPixel(X, Y));
+            Ruby.Array.Expect(Args, 2);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            Ruby.Array.Expect(Args, 1, "Integer");
+            int X = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            int Y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+            return Color.CreateColor(BitmapDictionary[Self].GetPixel(X, Y));
         }
 
-        protected static Ruby.Object set_pixel(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr set_pixel(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(3);
-            Args[0].Expect(Ruby.Integer.Class);
-            Args[1].Expect(Ruby.Integer.Class);
-            Args[2].Expect(Color.Class);
-            int X = Args.Get<Ruby.Integer>(0);
-            int Y = Args.Get<Ruby.Integer>(1);
+            Ruby.Array.Expect(Args, 3);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            Ruby.Array.Expect(Args, 1, "Integer");
+            Ruby.Array.Expect(Args, 2, "Color");
+            int X = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            int Y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].SetPixel(X, Y, Color.CreateColor(Args[2]));
+            BitmapDictionary[Self].SetPixel(X, Y, Color.CreateColor(Ruby.Array.Get(Args, 2)));
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object draw_line(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr draw_line(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(5);
-            Args[0].Expect(Ruby.Integer.Class);
-            Args[1].Expect(Ruby.Integer.Class);
-            Args[2].Expect(Ruby.Integer.Class);
-            Args[3].Expect(Ruby.Integer.Class);
-            Args[4].Expect(Color.Class);
-            int x1 = Args.Get<Ruby.Integer>(0);
-            int y1 = Args.Get<Ruby.Integer>(1);
-            int x2 = Args.Get<Ruby.Integer>(2);
-            int y2 = Args.Get<Ruby.Integer>(3);
+            Ruby.Array.Expect(Args, 5);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            Ruby.Array.Expect(Args, 1, "Integer");
+            Ruby.Array.Expect(Args, 2, "Integer");
+            Ruby.Array.Expect(Args, 3, "Integer");
+            Ruby.Array.Expect(Args, 4, "Color");
+            int x1 = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            int y1 = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+            int x2 = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+            int y2 = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
             AutoUnlock(Self);
-            odl.Color c = Color.CreateColor(Args[4]);
-            BitmapDictionary[Self.Pointer].DrawLine(x1, y1, x2, y2, c);
+            odl.Color c = Color.CreateColor(Ruby.Array.Get(Args, 4));
+            BitmapDictionary[Self].DrawLine(x1, y1, x2, y2, c);
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object draw_rect(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr draw_rect(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(2, 5);
+            Ruby.Array.Expect(Args, 2, 5);
             int x = 0,
                 y = 0,
                 w = 0,
                 h = 0;
             odl.Color c = null;
-            if (Args.Length == 2)
+            long len = Ruby.Array.Length(Args);
+            if (len == 2)
             {
-                Args[0].Expect(Rect.Class);
-                Args[1].Expect(Color.Class);
-                if (Args[0].GetIVar("@x").Is(Ruby.Float.Class)) x = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@x"));
-                else x = Args[0].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[0].GetIVar("@y").Is(Ruby.Float.Class)) y = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@y"));
-                else y = Args[0].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[0].GetIVar("@width").Is(Ruby.Float.Class)) w = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@width"));
-                else w = Args[0].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[0].GetIVar("@height").Is(Ruby.Float.Class)) h = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@height"));
-                else h = Args[0].AutoGetIVar<Ruby.Integer>("@height");
-                c = Color.CreateColor(Args[1]);
+                Ruby.Array.Expect(Args, 0, "Rect");
+                Ruby.Array.Expect(Args, 1, "Color");
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@x", "Float")) x = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                else x = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@y", "Float")) y = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                else y = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@width", "Float")) w = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                else w = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@height", "Float")) h = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                else h = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                c = Color.CreateColor(Ruby.Array.Get(Args, 1));
             }
-            else if (Args.Length == 5)
+            else if (len == 5)
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                Args[4].Expect(Color.Class);
-                x = Args.Get<Ruby.Integer>(0);
-                y = Args.Get<Ruby.Integer>(1);
-                w = Args.Get<Ruby.Integer>(2);
-                h = Args.Get<Ruby.Integer>(3);
-                c = Color.CreateColor(Args[4]);
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                Ruby.Array.Expect(Args, 4, "Color");
+                x = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                w = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                h = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                c = Color.CreateColor(Ruby.Array.Get(Args, 4));
             }
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].DrawRect(x, y, w, h, c);
+            BitmapDictionary[Self].DrawRect(x, y, w, h, c);
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object fill_rect(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr fill_rect(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(2, 5);
+            Ruby.Array.Expect(Args, 2, 5);
             int x = 0,
                 y = 0,
                 w = 0,
                 h = 0;
             odl.Color c = null;
-            if (Args.Length == 2)
+            long len = Ruby.Array.Length(Args);
+            if (len == 2)
             {
-                Args[0].Expect(Rect.Class);
-                Args[1].Expect(Color.Class);
-                if (Args[0].GetIVar("@x").Is(Ruby.Float.Class)) x = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@x"));
-                else x = Args[0].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[0].GetIVar("@y").Is(Ruby.Float.Class)) y = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@y"));
-                else y = Args[0].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[0].GetIVar("@width").Is(Ruby.Float.Class)) w = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@width"));
-                else w = Args[0].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[0].GetIVar("@height").Is(Ruby.Float.Class)) h = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@height"));
-                else h = Args[0].AutoGetIVar<Ruby.Integer>("@height");
-                c = Color.CreateColor(Args[1]);
+                Ruby.Array.Expect(Args, 0, "Rect");
+                Ruby.Array.Expect(Args, 1, "Color");
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@x", "Float")) x = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                else x = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@y", "Float")) y = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                else y = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@width", "Float")) w = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                else w = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@height", "Float")) h = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                else h = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                c = Color.CreateColor(Ruby.Array.Get(Args, 1));
             }
-            else if (Args.Length == 5)
+            else if (len == 5)
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                Args[4].Expect(Color.Class);
-                x = Args.Get<Ruby.Integer>(0);
-                y = Args.Get<Ruby.Integer>(1);
-                w = Args.Get<Ruby.Integer>(2);
-                h = Args.Get<Ruby.Integer>(3);
-                c = Color.CreateColor(Args[4]);
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                Ruby.Array.Expect(Args, 4, "Color");
+                x = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                w = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                h = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                c = Color.CreateColor(Ruby.Array.Get(Args, 4));
             }
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].FillRect(x, y, w, h, c);
+            BitmapDictionary[Self].FillRect(x, y, w, h, c);
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object blt(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr blt(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(1, 3, 4, 6, 9);
+            Ruby.Array.Expect(Args, 1, 3, 4, 6, 9);
             int dx = 0,
                 dy = 0,
                 dw = 0,
@@ -402,211 +412,214 @@ namespace peridot
                 sy = 0,
                 sw = 0,
                 sh = 0;
-            if (Args.Length == 1) // bmp
+            long len = Ruby.Array.Length(Args);
+            if (len == 1) // bmp
             {
-                Args[0].Expect(Bitmap.Class);
-                srcbmp = BitmapDictionary[Args[0].Pointer];
+                Ruby.Array.Expect(Args, 0, "Bitmap");
+                srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 0)];
                 dw = srcbmp.Width;
                 dh = srcbmp.Height;
                 sw = srcbmp.Width;
                 sh = srcbmp.Height;
-            }else if (Args.Length == 3) // destrect, bmp, srcrect
-            {
-                Args[0].Expect(Rect.Class);
-                Args[1].Expect(Bitmap.Class);
-                Args[2].Expect(Rect.Class);
-                if (Args[0].GetIVar("@x").Is(Ruby.Float.Class)) dx = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@x"));
-                else dx = Args[0].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[0].GetIVar("@y").Is(Ruby.Float.Class)) dy = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@y"));
-                else dy = Args[0].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[0].GetIVar("@width").Is(Ruby.Float.Class)) dw = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@width"));
-                else dw = Args[0].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[0].GetIVar("@height").Is(Ruby.Float.Class)) dh = (int) Math.Round(Args[0].AutoGetIVar<Ruby.Float>("@height"));
-                else dh = Args[0].AutoGetIVar<Ruby.Integer>("@height");
-                srcbmp = BitmapDictionary[Args[1].Pointer];
-                if (Args[2].GetIVar("@x").Is(Ruby.Float.Class)) sx = (int) Math.Round(Args[2].AutoGetIVar<Ruby.Float>("@x"));
-                else sx = Args[2].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[2].GetIVar("@y").Is(Ruby.Float.Class)) sy = (int) Math.Round(Args[2].AutoGetIVar<Ruby.Float>("@y"));
-                else sy = Args[2].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[2].GetIVar("@width").Is(Ruby.Float.Class)) sw = (int) Math.Round(Args[2].AutoGetIVar<Ruby.Float>("@width"));
-                else sw = Args[2].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[2].GetIVar("@height").Is(Ruby.Float.Class)) sh = (int) Math.Round(Args[2].AutoGetIVar<Ruby.Float>("@height"));
-                else sh = Args[2].AutoGetIVar<Ruby.Integer>("@height");
             }
-            else if (Args.Length == 4) // dx, dy, bmp, srcrect
+            else if (len == 3) // destrect, bmp, srcrect
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Bitmap.Class);
-                Args[3].Expect(Rect.Class);
-                dx = Args.Get<Ruby.Integer>(0);
-                dy = Args.Get<Ruby.Integer>(1);
-                srcbmp = BitmapDictionary[Args[2].Pointer];
-                if (Args[3].GetIVar("@x").Is(Ruby.Float.Class)) sx = (int) Math.Round(Args[3].AutoGetIVar<Ruby.Float>("@x"));
-                else sx = Args[3].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[3].GetIVar("@y").Is(Ruby.Float.Class)) sy = (int) Math.Round(Args[3].AutoGetIVar<Ruby.Float>("@y"));
-                else sy = Args[3].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[3].GetIVar("@width").Is(Ruby.Float.Class)) sw = (int) Math.Round(Args[3].AutoGetIVar<Ruby.Float>("@width"));
-                else sw = Args[3].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[3].GetIVar("@height").Is(Ruby.Float.Class)) sh = (int) Math.Round(Args[3].AutoGetIVar<Ruby.Float>("@height"));
-                else sh = Args[3].AutoGetIVar<Ruby.Integer>("@height");
+                Ruby.Array.Expect(Args, 0, "Rect");
+                Ruby.Array.Expect(Args, 1, "Bitmap");
+                Ruby.Array.Expect(Args, 2, "Rect");
+
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@x", "Float")) dx = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                else dx = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@y", "Float")) dy = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                else dy = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@width", "Float")) dw = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                else dw = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@height", "Float")) dh = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                else dh = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
+                srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 1)];
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 2), "@x", "Float")) sx = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@x"));
+                else sx = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 2), "@y", "Float")) sy = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@y"));
+                else sy = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 2), "@width", "Float")) sw = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@width"));
+                else sw = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 2), "@height", "Float")) sh = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@height"));
+                else sh = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 2), "@height"));
+            }
+            else if (len == 4) // dx, dy, bmp, srcrect
+            {
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Bitmap");
+                Ruby.Array.Expect(Args, 3, "Rect");
+                dx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                dy = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 2)];
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 3), "@x", "Float")) sx = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@x"));
+                else sx = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 3), "@y", "Float")) sy = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@y"));
+                else sy = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 3), "@width", "Float")) sw = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@width"));
+                else sw = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 3), "@height", "Float")) sh = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@height"));
+                else sh = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 3), "@height"));
                 dw = sw;
                 dh = sh;
             }
-            else if (Args.Length == 6) // dx, dy, dw, dh, bmp, srcrect
+            else if (len == 6) // dx, dy, dw, dh, bmp, srcrect
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                Args[4].Expect(Bitmap.Class);
-                Args[5].Expect(Rect.Class);
-                dx = Args.Get<Ruby.Integer>(0);
-                dy = Args.Get<Ruby.Integer>(1);
-                dw = Args.Get<Ruby.Integer>(2);
-                dh = Args.Get<Ruby.Integer>(3);
-                srcbmp = BitmapDictionary[Args[4].Pointer];
-                if (Args[5].GetIVar("@x").Is(Ruby.Float.Class)) sx = (int) Math.Round(Args[5].AutoGetIVar<Ruby.Float>("@x"));
-                else sx = Args[5].AutoGetIVar<Ruby.Integer>("@x");
-                if (Args[5].GetIVar("@y").Is(Ruby.Float.Class)) sy = (int) Math.Round(Args[5].AutoGetIVar<Ruby.Float>("@y"));
-                else sy = Args[5].AutoGetIVar<Ruby.Integer>("@y");
-                if (Args[5].GetIVar("@width").Is(Ruby.Float.Class)) sw = (int) Math.Round(Args[5].AutoGetIVar<Ruby.Float>("@width"));
-                else sw = Args[5].AutoGetIVar<Ruby.Integer>("@width");
-                if (Args[5].GetIVar("@height").Is(Ruby.Float.Class)) sh = (int) Math.Round(Args[5].AutoGetIVar<Ruby.Float>("@height"));
-                else sh = Args[5].AutoGetIVar<Ruby.Integer>("@height");
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                Ruby.Array.Expect(Args, 4, "Bitmap");
+                Ruby.Array.Expect(Args, 5, "Rect");
+                dx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                dy = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                dw = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                dh = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 4)];
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 5), "@x", "Float")) sx = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@x"));
+                else sx = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@x"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 5), "@y", "Float")) sy = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@y"));
+                else sy = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@y"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 5), "@width", "Float")) sw = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@width"));
+                else sw = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@width"));
+                if (Ruby.IVarIs(Ruby.Array.Get(Args, 5), "@height", "Float")) sh = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@height"));
+                else sh = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 5), "@height"));
             }
-            else if (Args.Length == 9) // dx, dy, dw, dh, bmp, sx, sy, sw, sh
+            else if (len == 9) // dx, dy, dw, dh, bmp, sx, sy, sw, sh
             {
-                Args[0].Expect(Ruby.Integer.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Args[2].Expect(Ruby.Integer.Class);
-                Args[3].Expect(Ruby.Integer.Class);
-                Args[4].Expect(Bitmap.Class);
-                Args[5].Expect(Ruby.Integer.Class);
-                Args[6].Expect(Ruby.Integer.Class);
-                Args[7].Expect(Ruby.Integer.Class);
-                Args[8].Expect(Ruby.Integer.Class);
-                dx = Args.Get<Ruby.Integer>(0);
-                dy = Args.Get<Ruby.Integer>(1);
-                dw = Args.Get<Ruby.Integer>(2);
-                dh = Args.Get<Ruby.Integer>(3);
-                srcbmp = BitmapDictionary[Args[4].Pointer];
-                sx = Args.Get<Ruby.Integer>(5);
-                sy = Args.Get<Ruby.Integer>(6);
-                sw = Args.Get<Ruby.Integer>(7);
-                sh = Args.Get<Ruby.Integer>(8);
+                Ruby.Array.Expect(Args, 0, "Integer");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.Array.Expect(Args, 3, "Integer");
+                Ruby.Array.Expect(Args, 4, "Bitmap");
+                Ruby.Array.Expect(Args, 5, "Integer");
+                Ruby.Array.Expect(Args, 6, "Integer");
+                Ruby.Array.Expect(Args, 7, "Integer");
+                Ruby.Array.Expect(Args, 8, "Integer");
+                dx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+                dy = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+                dw = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+                dh = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+                srcbmp = BitmapDictionary[Ruby.Array.Get(Args, 4)];
+                sx = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 5));
+                sy = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 6));
+                sw = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 7));
+                sh = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 8));
             }
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].Build(dx, dy, dw, dh, srcbmp, sx, sy, sw, sh);
+            BitmapDictionary[Self].Build(dx, dy, dw, dh, srcbmp, sx, sy, sw, sh);
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object text_size(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr text_size(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(1);
-            Args[0].Expect(Ruby.String.Class);
-            string text = Args.Get<Ruby.String>(0);
-            BitmapDictionary[Self.Pointer].Font = Font.CreateFont(Self.GetIVar("@font"));
-            return Rect.CreateRect(new odl.Rect(BitmapDictionary[Self.Pointer].TextSize(text)));
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "String");
+            string text = Ruby.String.FromPtr(Ruby.Array.Get(Args, 0));
+            BitmapDictionary[Self].Font = Font.CreateFont(Ruby.GetIVar(Self, "@font"));
+            return Rect.CreateRect(new odl.Rect(BitmapDictionary[Self].TextSize(text)));
         }
 
-        protected static Ruby.Object draw_text(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr draw_text(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(5, 6);
-            Args[0].Expect(Ruby.Integer.Class);
-            Args[1].Expect(Ruby.Integer.Class);
-            Args[2].Expect(Ruby.Integer.Class);
-            Args[3].Expect(Ruby.Integer.Class);
-            Args[4].Expect(Ruby.String.Class);
-            int x = Args.Get<Ruby.Integer>(0);
-            int y = Args.Get<Ruby.Integer>(1);
-            int w = Args.Get<Ruby.Integer>(2);
-            int h = Args.Get<Ruby.Integer>(3);
-            string text = Args.Get<Ruby.String>(4);
+            Ruby.Array.Expect(Args, 5, 6);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            Ruby.Array.Expect(Args, 1, "Integer");
+            Ruby.Array.Expect(Args, 2, "Integer");
+            Ruby.Array.Expect(Args, 3, "Integer");
+            Ruby.Array.Expect(Args, 4, "String");
+            int x = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            int y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
+            int w = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
+            int h = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
+            string text = Ruby.String.FromPtr(Ruby.Array.Get(Args, 4));
             int align = 0;
-            if (Args.Length == 6)
+            if (Ruby.Array.Length(Args) == 6)
             {
-                if (Args[5].Is(Ruby.Symbol.Class))
+                if (Ruby.Is(Ruby.Array.Get(Args, 5), "Symbol"))
                 {
-                    if (Args.Get<Ruby.Symbol>(5) == ":left") align = 0;
-                    else if (Args.Get<Ruby.Symbol>(5) == ":center" || Args.Get<Ruby.Symbol>(5) == ":middle") align = 1;
-                    else if (Args.Get<Ruby.Symbol>(5) == ":right") align = 2;
+                    string sym = Ruby.Symbol.FromPtr(Ruby.Array.Get(Args, 5));
+                    if (sym == ":left") align = 0;
+                    else if (sym == ":center" || sym == ":middle") align = 1;
+                    else if (sym == ":right") align = 2;
                     else Ruby.Raise(Ruby.ErrorType.ArgumentError, "invalid alignment argument");
                 }
                 else
                 {
-                    Args[5].Expect(Ruby.Integer.Class);
-                    align = Args.Get<Ruby.Integer>(5);
+                    Ruby.Array.Expect(Args, 5, "Integer");
+                    align = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 5));
                     if (align < 0 || align > 2) Ruby.Raise(Ruby.ErrorType.ArgumentError, "invalid alignment argument");
                 }
             }
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].Font = Font.CreateFont(Self.GetIVar("@font"));
-            odl.Color color = Color.CreateColor(Self.GetIVar("@font").GetIVar("@color"));
+            BitmapDictionary[Self].Font = Font.CreateFont(Ruby.GetIVar(Self, "@font"));
+            odl.Color color = Color.CreateColor(Ruby.GetIVar(Ruby.GetIVar(Self, "@font"), "@color"));
             odl.DrawOptions options = 0;
             bool outline = false;
             if (align == 0) options |= odl.DrawOptions.LeftAlign;
             else if (align == 1) options |= odl.DrawOptions.CenterAlign;
             else if (align == 2) options |= odl.DrawOptions.RightAlign;
-            if (Self.GetIVar("@font").GetIVar("@outline") == Ruby.True) outline = true;
+            if (Ruby.GetIVar(Ruby.GetIVar(Self, "@font"), "@outline") == Ruby.True) outline = true;
             if (outline)
             {
-                odl.Color outline_color = Color.CreateColor(Self.GetIVar("@font").GetIVar("@outline_color"));
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x - 1, y - 1, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x, y - 1, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x + 1, y - 1, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x - 1, y, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x + 1, y, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x - 1, y + 1, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x, y + 1, w, h), outline_color, options);
-                BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x + 1, y + 1, w, h), outline_color, options);
+                odl.Color outline_color = Color.CreateColor(Ruby.GetIVar(Ruby.GetIVar(Self, "@font"), "@outline_color"));
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x - 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x, y - 1, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x + 1, y - 1, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x - 1, y, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x + 1, y, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x - 1, y + 1, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x, y + 1, w, h), outline_color, options);
+                BitmapDictionary[Self].DrawText(text, new odl.Rect(x + 1, y + 1, w, h), outline_color, options);
             }
-            BitmapDictionary[Self.Pointer].DrawText(text, new odl.Rect(x, y, w, h), color, options);
-            SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[Self.Pointer].Texture, SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            BitmapDictionary[Self].DrawText(text, new odl.Rect(x, y, w, h), color, options);
+            SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[Self].Texture, SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object clear(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr clear(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
+            Ruby.Array.Expect(Args, 0);
             AutoUnlock(Self);
-            BitmapDictionary[Self.Pointer].Clear();
+            BitmapDictionary[Self].Clear();
             AutoLock(Self);
             return Ruby.True;
         }
 
-        protected static Ruby.Object dispose(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr dispose(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
-            Args.Expect(0);
-            BitmapDictionary[Self.Pointer].Dispose();
+            Ruby.Array.Expect(Args, 0);
+            BitmapDictionary[Self].Dispose();
             foreach (KeyValuePair<IntPtr, odl.Bitmap> kvp in BitmapDictionary)
             {
-                if (kvp.Value == BitmapDictionary[Self.Pointer] && kvp.Key != Self.Pointer)
+                if (kvp.Value == BitmapDictionary[Self] && kvp.Key != Self)
                 {
-                    Ruby.Object otherbmp = new Ruby.Object(kvp.Key);
-                    otherbmp.SetIVar("@disposed", Ruby.True);
+                    Ruby.SetIVar(kvp.Key, "@disposed", Ruby.True);
                 }
             }
-            BitmapDictionary.Remove(Self.Pointer);
-            Self.SetIVar("@disposed", Ruby.True);
+            BitmapDictionary.Remove(Self);
+            Ruby.SetIVar(Self, "@disposed", Ruby.True);
             return Ruby.True;
         }
 
-        protected static Ruby.Object disposed(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr disposed(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@disposed") == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False;
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@disposed") == Ruby.True ? Ruby.True : Ruby.False;
         }
 
-        protected static void GuardDisposed(Ruby.Object Self)
+        static void GuardDisposed(IntPtr Self)
         {
-            if (Self.GetIVar("@disposed") == Ruby.True)
+            if (Ruby.GetIVar(Self, "@disposed") == Ruby.True)
             {
                 Ruby.Raise(Ruby.ErrorType.RuntimeError, "bitmap already disposed");
             }

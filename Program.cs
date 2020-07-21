@@ -81,13 +81,13 @@ namespace peridot
 
             int Width = Config.WindowWidth;
             int Height = Config.WindowHeight;
-            Graphics.Module.SetIVar("@width", (Ruby.Integer) Width);
-            Graphics.Module.SetIVar("@height", (Ruby.Integer) Height);
-            Ruby.Object.Class.SetConst("SCREENWIDTH", (Ruby.Integer) Width);
-            Ruby.Object.Class.SetConst("SCREENHEIGHT", (Ruby.Integer) Height);
+            Ruby.SetIVar(Graphics.Module, "@width", Ruby.Integer.ToPtr(Width));
+            Ruby.SetIVar(Graphics.Module, "@height", Ruby.Integer.ToPtr(Height));
+            Ruby.SetConst(Ruby.Object.Class, "SCREENWIDTH", Ruby.Integer.ToPtr(Width));
+            Ruby.SetConst(Ruby.Object.Class, "SCREENHEIGHT", Ruby.Integer.ToPtr(Height));
 
-            Ruby.Object.Class.DefineMethod("p", p);
-            Ruby.Object.Class.DefineMethod("puts", puts);
+            Ruby.Class.DefineMethod(Ruby.Object.Class, "p", p);
+            Ruby.Class.DefineMethod(Ruby.Object.Class, "puts", puts);
         }
 
         public static void InitializeOdl()
@@ -192,30 +192,31 @@ namespace peridot
 
         public static void PrepareLoadPath()
         {
-            Ruby.Array load_path = Ruby.GetGlobal("$LOAD_PATH").Convert<Ruby.Array>();
+            IntPtr load_path = Ruby.GetGlobal("$LOAD_PATH");
             for (int i = 0; i < Config.RubyLoadPath.Count; i++)
             {
-                load_path.Funcall("push", (Ruby.String) Config.RubyLoadPath[i]);
+                Ruby.Funcall(load_path, "push", Ruby.String.ToPtr(Config.RubyLoadPath[i]));
             }
             if (!string.IsNullOrEmpty(Config.MainDirectory))
             {
-                Ruby.Dir.Chdir(Config.MainDirectory);
+                Ruby.Funcall(Ruby.GetConst(Ruby.Object.Class, "Dir"), "chdir", Ruby.String.ToPtr(Config.MainDirectory));
             }
         }
 
-        protected static Ruby.Object p(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr p(IntPtr Self, IntPtr Args)
         {
-            if (Args.Length == 0) Ruby.Raise(Ruby.ErrorType.ArgumentError, $"wrong number of arguments (given 0, expected at least 1)");
+            long len = Ruby.Array.Length(Args);
+            if (len == 0) Ruby.Raise(Ruby.ErrorType.ArgumentError, $"wrong number of arguments (given 0, expected at least 1)");
             StringBuilder msg = new StringBuilder();
-            for (int i = 0; i < Args.Length; i++)
+            for (int i = 0; i < len; i++)
             {
-                string value = Args[i].AutoFuncall<Ruby.String>("inspect");
+                string value = Ruby.String.FromPtr(Ruby.Funcall(Ruby.Array.Get(Args, i), "inspect"));
                 for (int j = 0; j < value.Length / 96; j++)
                 {
                     value = value.Insert(j + j * 96, "\n");
                 }
                 msg.Append(value);
-                if (i != Args.Length - 1) msg.AppendLine();
+                if (i != len - 1) msg.AppendLine();
             }
             string text = msg.ToString();
             int newlines = 0;
@@ -225,22 +226,23 @@ namespace peridot
                 if (newlines == 24) text = text.Substring(0, i) + "...";
             }
             new StandardBox(MainWindow, text).Show();
-            return Args.Length > 1 ? Args : Args[0];
+            return len > 1 ? Args : Ruby.Array.Get(Args, 0);
         }
 
-        protected static Ruby.Object puts(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr puts(IntPtr Self, IntPtr Args)
         {
-            if (Args.Length == 0) Ruby.Raise(Ruby.ErrorType.ArgumentError, $"wrong number of arguments (given 0, expected at least 1)");
+            long len = Ruby.Array.Length(Args);
+            if (len == 0) Ruby.Raise(Ruby.ErrorType.ArgumentError, $"wrong number of arguments (given 0, expected at least 1)");
             StringBuilder msg = new StringBuilder();
-            for (int i = 0; i < Args.Length; i++)
+            for (int i = 0; i < len; i++)
             {
-                string value = Args[i].AutoFuncall<Ruby.String>("to_s");
+                string value = Ruby.String.FromPtr(Ruby.Funcall(Ruby.Array.Get(Args, i), "to_s"));
                 for (int j = 0; j < value.Length / 96; j++)
                 {
                     value = value.Insert(j + j * 96, "\n");
                 }
                 msg.Append(value);
-                if (i != Args.Length - 1) msg.AppendLine();
+                if (i != len - 1) msg.AppendLine();
             }
             string text = msg.ToString();
             int newlines = 0;
@@ -250,7 +252,7 @@ namespace peridot
                 if (newlines == 24) text = text.Substring(0, i) + "...";
             }
             new StandardBox(MainWindow, text).Show();
-            return Args.Length > 1 ? Args : Args[0];
+            return len > 1 ? Args : Ruby.Array.Get(Args, 0);
         }
     }
 }

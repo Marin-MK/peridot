@@ -3,238 +3,232 @@ using rubydotnet;
 
 namespace peridot
 {
-    public class Font : Ruby.Object
+    public static class Font
     {
-        public new static string KlassName = "Font";
-        public new static Ruby.Class Class;
-
-        public Font(IntPtr Pointer) : base(Pointer) { }
+        public static IntPtr Class;
 
         public static void Create()
         {
-            Ruby.Class c = Ruby.Class.DefineClass<Font>(KlassName);
-            Class = c;
-            c.DefineClassMethod("default_folder", default_folderget);
-            c.DefineClassMethod("default_folder=", default_folderset);
-            c.DefineClassMethod("default_name", default_nameget);
-            c.DefineClassMethod("default_name=", default_nameset);
-            c.DefineClassMethod("default_size", default_sizeget);
-            c.DefineClassMethod("default_size=", default_sizeset);
-            c.DefineClassMethod("default_color", default_colorget);
-            c.DefineClassMethod("default_color=", default_colorset);
-            c.DefineClassMethod("default_outline", default_outlineget);
-            c.DefineClassMethod("default_outline=", default_outlineset);
-            c.DefineClassMethod("default_outline_color", default_outline_colorget);
-            c.DefineClassMethod("default_outline_color=", default_outline_colorset);
-            c.DefineMethod("initialize", initialize);
-            c.DefineMethod("name", nameget);
-            c.DefineMethod("name=", nameset);
-            c.DefineMethod("size", sizeget);
-            c.DefineMethod("size=", sizeset);
-            c.DefineMethod("color", colorget);
-            c.DefineMethod("color=", colorset);
-            c.DefineMethod("outline", outlineget);
-            c.DefineMethod("outline=", outlineset);
-            c.DefineMethod("outline_color", outline_colorget);
-            c.DefineMethod("outline_color=", outline_colorset);
+            Class = Ruby.Class.Define("Font");
+            Ruby.Class.DefineClassMethod(Class, "default_folder", default_folderget);
+            Ruby.Class.DefineClassMethod(Class, "default_folder=", default_folderset);
+            Ruby.Class.DefineClassMethod(Class, "default_name", default_nameget);
+            Ruby.Class.DefineClassMethod(Class, "default_name=", default_nameset);
+            Ruby.Class.DefineClassMethod(Class, "default_size", default_sizeget);
+            Ruby.Class.DefineClassMethod(Class, "default_size=", default_sizeset);
+            Ruby.Class.DefineClassMethod(Class, "default_color", default_colorget);
+            Ruby.Class.DefineClassMethod(Class, "default_color=", default_colorset);
+            Ruby.Class.DefineClassMethod(Class, "default_outline", default_outlineget);
+            Ruby.Class.DefineClassMethod(Class, "default_outline=", default_outlineset);
+            Ruby.Class.DefineClassMethod(Class, "default_outline_color", default_outline_colorget);
+            Ruby.Class.DefineClassMethod(Class, "default_outline_color=", default_outline_colorset);
+            Ruby.Class.DefineMethod(Class, "initialize", initialize);
+            Ruby.Class.DefineMethod(Class, "name", nameget);
+            Ruby.Class.DefineMethod(Class, "name=", nameset);
+            Ruby.Class.DefineMethod(Class, "size", sizeget);
+            Ruby.Class.DefineMethod(Class, "size=", sizeset);
+            Ruby.Class.DefineMethod(Class, "color", colorget);
+            Ruby.Class.DefineMethod(Class, "color=", colorset);
+            Ruby.Class.DefineMethod(Class, "outline", outlineget);
+            Ruby.Class.DefineMethod(Class, "outline=", outlineset);
+            Ruby.Class.DefineMethod(Class, "outline_color", outline_colorget);
+            Ruby.Class.DefineMethod(Class, "outline_color=", outline_colorset);
         }
 
-        public static Font CreateFont()
+        public static IntPtr CreateFont()
         {
-            if (Class.GetIVar("@default_name") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font name defined");
-            if (Class.GetIVar("@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
-            return Class.AutoFuncall<Font>("new",
-                Class.GetIVar("@default_name"),
-                Class.GetIVar("@default_size")
-            );
+            if (Ruby.GetIVar(Class, "@default_name") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font name defined");
+            if (Ruby.GetIVar(Class, "@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
+            return Ruby.Funcall(Class, "new", Ruby.GetIVar(Class, "@default_name"), Ruby.GetIVar(Class, "@default_size"));
         }
 
-        public static odl.Font CreateFont(Ruby.Object Self)
+        public static odl.Font CreateFont(IntPtr Self)
         {
             string folder = null;
-            if (Class.GetIVar("@default_folder") != Ruby.Nil) folder = Class.AutoGetIVar<Ruby.String>("@default_folder");
-            string name = Self.AutoGetIVar<Ruby.String>("@name");
-            int size = Self.AutoGetIVar<Ruby.Integer>("@size");
+            if (Ruby.GetIVar(Class, "@default_folder") != Ruby.Nil) folder = Ruby.String.FromPtr(Ruby.GetIVar(Class, "@default_folder"));
+            string name = Ruby.String.FromPtr(Ruby.GetIVar(Self, "@name"));
+            int size = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@size"));
             if (!string.IsNullOrEmpty(folder) && odl.Font.Exists(folder + "/" + name))
                 return odl.Font.Get(folder + "/" + name, size);
             else return odl.Font.Get(name, size);
         }
 
-        public static Ruby.Object default_folderget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_folderget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@default_folder");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_folder");
         }
 
-        public static Ruby.Object default_folderset(Ruby.Object self, Ruby.Array Args)
+        static IntPtr default_folderset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.String.Class, Ruby.NilClass.Class);
-            return Class.SetIVar("@default_folder", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "String", "NilClass");
+            return Ruby.SetIVar(Self, "@default_folder", Ruby.Array.Get(Args, 0));
         }
 
-        public static Ruby.Object default_nameget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_nameget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Class.GetIVar("@default_name");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_name");
         }
 
-        public static Ruby.Object default_nameset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_nameset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.String.Class, Ruby.NilClass.Class);
-            return Class.SetIVar("@default_name", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "String", "NilClass");
+            return Ruby.SetIVar(Self, "@default_name", Ruby.Array.Get(Args, 0));
         }
 
-        public static Ruby.Object default_sizeget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_sizeget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Class.GetIVar("@default_size");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_size");
         }
 
-        public static Ruby.Object default_sizeset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_sizeset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class, Ruby.NilClass.Class);
-            return Class.SetIVar("@default_size", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer", "NilClass");
+            return Ruby.SetIVar(Self, "@default_size", Ruby.Array.Get(Args, 0));
         }
 
-        public static Ruby.Object default_colorget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_colorget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Class.GetIVar("@default_color");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_color");
         }
 
-        public static Ruby.Object default_colorset(Ruby.Object Self, Ruby.Array Args)
+        public static IntPtr default_colorset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Color.Class, Ruby.NilClass.Class);
-            return Class.SetIVar("@default_color", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Color", "NilClass");
+            return Ruby.SetIVar(Self, "@default_color", Ruby.Array.Get(Args, 0));
         }
 
-        public static Ruby.Object default_outlineget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_outlineget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Class.GetIVar("@default_outline");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_outline");
         }
 
-        public static Ruby.Object default_outlineset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_outlineset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
-            return Class.SetIVar("@default_outline", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass", "NilClass");
+            return Ruby.SetIVar(Self, "@default_outline", Ruby.Array.Get(Args, 0) == Ruby.True ? Ruby.True : Ruby.False);
         }
 
-        public static Ruby.Object default_outline_colorget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_outline_colorget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Class.GetIVar("@default_outline_color");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@default_outline_color");
         }
 
-        public static Ruby.Object default_outline_colorset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr default_outline_colorset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Color.Class, Ruby.NilClass.Class);
-            return Self.SetIVar("@default_outline_color", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Color", "NilClass");
+            return Ruby.SetIVar(Self, "@default_outline_color", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object initialize(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr initialize(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0, 1, 2);
-            Ruby.Object Name = null,
-                        Size = null;
-            if (Args.Length == 2)
+            Ruby.Array.Expect(Args, 0, 1, 2);
+            IntPtr Name = IntPtr.Zero,
+                   Size = IntPtr.Zero;
+            long len = Ruby.Array.Length(Args);
+            if (len == 0)
             {
-                Args[0].Expect(Ruby.String.Class);
-                Args[1].Expect(Ruby.Integer.Class);
-                Name = Args[0];
-                Size = Args[1];
+                if (Ruby.GetIVar(Class, "@default_name") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font name defined");
+                if (Ruby.GetIVar(Class, "@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
+                Name = Ruby.GetIVar(Class, "@default_name");
+                Size = Ruby.GetIVar(Class, "@default_size");
             }
-            else if (Args.Length == 1)
+            else if (len == 1)
             {
-                Args[0].Expect(Ruby.String.Class);
-                Name = Args[0];
-                if (Class.GetIVar("@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
-                Size = Class.GetIVar("@default_size");
+                Ruby.Array.Expect(Args, 0, "String");
+                Name = Ruby.Array.Get(Args, 0);
+                if (Ruby.GetIVar(Class, "@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
+                Size = Ruby.GetIVar(Class, "@default_size");
             }
-            else if (Args.Length == 0)
+            else if (len == 2)
             {
-                if (Class.GetIVar("@default_name") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font name defined");
-                if (Class.GetIVar("@default_size") == Ruby.Nil) Ruby.Raise(Ruby.ErrorType.RuntimeError, "no default font size defined");
-                Name = Class.GetIVar("@default_name");
-                Size = Class.GetIVar("@default_size");
+                Ruby.Array.Expect(Args, 0, "String");
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Name = Ruby.Array.Get(Args, 0);
+                Size = Ruby.Array.Get(Args, 1);
             }
-            Self.SetIVar("@name", Name);
-            Self.SetIVar("@size", Size);
-            Self.SetIVar("@color", Class.GetIVar("@default_color"));
-            Self.SetIVar("@outline", Class.GetIVar("@default_outline"));
-            Self.SetIVar("@outline_color", Class.GetIVar("@default_outline_color"));
+            Ruby.SetIVar(Self, "@name", Name);
+            Ruby.SetIVar(Self, "@size", Size);
+            Ruby.SetIVar(Self, "@color", Ruby.GetIVar(Class, "@default_color"));
+            Ruby.SetIVar(Self, "@outline", Ruby.GetIVar(Class, "@default_outline"));
+            Ruby.SetIVar(Self, "@outline_color", Ruby.GetIVar(Class, "@default_outline_color"));
             return Self;
         }
 
-        protected static Ruby.Object nameget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr nameget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@name");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@name");
         }
 
-        protected static Ruby.Object nameset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr nameset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.String.Class);
-            return Self.SetIVar("@name", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "String");
+            return Ruby.SetIVar(Self, "@name", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object sizeget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr sizeget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@size");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@size");
         }
 
-        protected static Ruby.Object sizeset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr sizeset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.Integer.Class);
-            return Self.SetIVar("@size", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            return Ruby.SetIVar(Self, "@size", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object colorget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr colorget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@color");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@color");
         }
 
-        protected static Ruby.Object colorset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr colorset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Color.Class);
-            return Self.SetIVar("@color", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Color");
+            return Ruby.SetIVar(Self, "@color", Ruby.Array.Get(Args, 0));
         }
 
-        protected static Ruby.Object outlineget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr outlineget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@outline");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@outline");
         }
 
-        protected static Ruby.Object outlineset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr outlineset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Ruby.TrueClass.Class, Ruby.FalseClass.Class, Ruby.NilClass.Class);
-            return Self.SetIVar("@outline", Args[0] == Ruby.True ? (Ruby.Object) Ruby.True : Ruby.False);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass", "NilClass");
+            return Ruby.SetIVar(Self, "@outline", Ruby.Array.Get(Args, 0) == Ruby.True ? Ruby.True : Ruby.False);
         }
 
-        protected static Ruby.Object outline_colorget(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr outline_colorget(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(0);
-            return Self.GetIVar("@outline_color");
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@outline_color");
         }
 
-        protected static Ruby.Object outline_colorset(Ruby.Object Self, Ruby.Array Args)
+        static IntPtr outline_colorset(IntPtr Self, IntPtr Args)
         {
-            Args.Expect(1);
-            Args[0].Expect(Color.Class);
-            return Self.SetIVar("@outline_color", Args[0]);
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Color");
+            return Ruby.SetIVar(Self, "@outline_color", Ruby.Array.Get(Args, 0));
         }
     }
 }
