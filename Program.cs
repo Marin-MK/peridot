@@ -56,7 +56,7 @@ namespace peridot
 
             try
             {
-                Graphics.Create();
+                System.Create();
                 Input.Create();
                 Audio.Create();
                 //Sound.Create();
@@ -81,8 +81,8 @@ namespace peridot
 
             int Width = Config.WindowWidth;
             int Height = Config.WindowHeight;
-            Ruby.SetIVar(Graphics.Module, "@width", Ruby.Integer.ToPtr(Width));
-            Ruby.SetIVar(Graphics.Module, "@height", Ruby.Integer.ToPtr(Height));
+            Ruby.SetIVar(System.Module, "@width", Ruby.Integer.ToPtr(Width));
+            Ruby.SetIVar(System.Module, "@height", Ruby.Integer.ToPtr(Height));
             Ruby.SetConst(Ruby.Object.Class, "SCREENWIDTH", Ruby.Integer.ToPtr(Width));
             Ruby.SetConst(Ruby.Object.Class, "SCREENHEIGHT", Ruby.Integer.ToPtr(Height));
 
@@ -153,7 +153,7 @@ namespace peridot
 
         public static void StartGraphics()
         {
-            Graphics.Start();
+            System.Start();
         }
 
         public static void RunGame()

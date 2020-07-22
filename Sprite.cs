@@ -63,7 +63,7 @@ namespace peridot
             long len = Ruby.Array.Length(Args);
             if (len == 0 || len == 1 && Ruby.Array.Get(Args, 0) == Ruby.Nil)
             {
-                vp = Graphics.MainViewport;
+                vp = System.MainViewport;
                 Ruby.SetIVar(Self, "@viewport", Ruby.Nil);
             }
             else if (len == 1)
@@ -120,7 +120,7 @@ namespace peridot
             IntPtr obj = Ruby.Nil;
             if (Ruby.Array.Get(Args, 0) == Ruby.Nil)
             {
-                SpriteDictionary[Self].Viewport = Viewport.ViewportDictionary[Graphics.MainViewport];
+                SpriteDictionary[Self].Viewport = Viewport.ViewportDictionary[System.MainViewport];
             }
             else
             {
