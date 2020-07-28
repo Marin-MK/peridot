@@ -1,4 +1,5 @@
 ﻿using System;
+using odl;
 using rubydotnet;
 
 namespace peridot
@@ -28,6 +29,9 @@ namespace peridot
             Ruby.Module.DefineClassMethod(Module, "screenshot", screenshot);
             Ruby.Module.DefineClassMethod(Module, "update", update);
             Ruby.Module.DefineClassMethod(Module, "wait", wait);
+            Ruby.Module.DefineClassMethod(Module, "windows?", windows);
+            Ruby.Module.DefineClassMethod(Module, "linux?", linux);
+            Ruby.Module.DefineClassMethod(Module, "mac?", mac);
         }
 
         public static void Start()
@@ -190,7 +194,7 @@ namespace peridot
         static IntPtr update(IntPtr Self, IntPtr Args)
         {
             Ruby.Array.Expect(Args, 0);
-            if (!odl.Graphics.Initialized) Ruby.Raise(Ruby.ErrorType.SystemExit, "sytem stopped");
+            if (!odl.Graphics.Initialized) Ruby.Raise(Ruby.ErrorType.SystemExit, "system stopped");
 
             odl.Graphics.UpdateInput();
             odl.Graphics.UpdateWindows();
@@ -211,6 +215,24 @@ namespace peridot
             Ruby.Array.Expect(Args, 0, "Integer");
             SDL2.SDL.SDL_Delay((uint) (1000d / Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@frame_rate")) * Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0))));
             return Ruby.True;
+        }
+        
+        static IntPtr windows(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return SDL2.SDL.SDL_GetPlatform() == "Windows" ? Ruby.True : Ruby.False;
+        }
+
+        static IntPtr linux(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return SDL2.SDL.SDL_GetPlatform() == "Linux" ? Ruby.True : Ruby.False;
+        }
+
+        static IntPtr mac(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return SDL2.SDL.SDL_GetPlatform() == "Mac OS X" ? Ruby.True : Ruby.False;
         }
     }
 }

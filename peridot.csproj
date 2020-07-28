@@ -6,6 +6,7 @@
     <Platforms>x64</Platforms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <StartupObject />
+    <Configurations>Debug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

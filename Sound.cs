@@ -4,352 +4,246 @@ using rubydotnet;
 
 namespace peridot
 {
-    /*public class Sound : RubyObject
+    public static class Sound
     {
         public static IntPtr Class;
         public static Dictionary<IntPtr, odl.Sound> SoundDictionary = new Dictionary<IntPtr, odl.Sound>();
 
-        public static Class CreateClass()
+        public static void Create()
         {
-            Class c = new Class("Sound");
-            Class = c.Pointer;
-            c.DefineClassMethod("new", _new);
-            c.DefineMethod("initialize", initialize);
-            c.DefineMethod("play", play);
-            c.DefineMethod("pause", pause);
-            c.DefineMethod("paused?", paused);
-            c.DefineMethod("resume", resume);
-            c.DefineMethod("stop", stop);
-            c.DefineMethod("dispose", dispose);
-            c.DefineMethod("disposed?", disposed);
-            c.DefineMethod("autodispose", autodisposeget);
-            c.DefineMethod("autodispose=", autodisposeset);
-            c.DefineMethod("filename", filenameget);
-            c.DefineMethod("volume", volumeget);
-            c.DefineMethod("volume=", volumeset);
-            c.DefineMethod("position", positionget);
-            c.DefineMethod("position=", positionset);
-            c.DefineMethod("pan", panget);
-            c.DefineMethod("pan=", panset);
-            c.DefineMethod("fade_in_length", fade_in_lengthget);
-            c.DefineMethod("fade_in_length=", fade_in_lengthset);
-            c.DefineMethod("fade_out_length", fade_out_lengthget);
-            c.DefineMethod("fade_out_length=", fade_out_lengthset);
-            c.DefineMethod("loop", loopget);
-            c.DefineMethod("loop=", loopset);
-            c.DefineMethod("loop_start_position", loop_start_positionget);
-            c.DefineMethod("loop_start_position=", loop_start_positionset);
-            c.DefineMethod("loop_end_position", loop_end_positionget);
-            c.DefineMethod("loop_end_position=", loop_end_positionset);
-            c.DefineMethod("loop_times", loop_timesget);
-            c.DefineMethod("loop_times=", loop_timesset);
-            return c;
+            Class = Ruby.Class.Define("Sound");
+            Ruby.Class.DefineMethod(Class, "initialize", initialize);
+            Ruby.Class.DefineMethod(Class, "filename", filenameget);
+            Ruby.Class.DefineMethod(Class, "volume", volumeget);
+            Ruby.Class.DefineMethod(Class, "volume=", volumeset);
+            Ruby.Class.DefineMethod(Class, "pitch", pitchget);
+            Ruby.Class.DefineMethod(Class, "pitch=", pitchset);
+            Ruby.Class.DefineMethod(Class, "sample_rate", sample_rateget);
+            Ruby.Class.DefineMethod(Class, "sample_rate=", sample_rateset);
+            Ruby.Class.DefineMethod(Class, "pan", panget);
+            Ruby.Class.DefineMethod(Class, "pan=", panset);
+            Ruby.Class.DefineMethod(Class, "position", positionget);
+            Ruby.Class.DefineMethod(Class, "position=", positionset);
+            Ruby.Class.DefineMethod(Class, "looping", loopingget);
+            Ruby.Class.DefineMethod(Class, "looping=", loopingset);
+            Ruby.Class.DefineMethod(Class, "loop_start", loop_startget);
+            Ruby.Class.DefineMethod(Class, "loop_start=", loop_startset);
+            Ruby.Class.DefineMethod(Class, "loop_end", loop_endget);
+            Ruby.Class.DefineMethod(Class, "loop_end=", loop_endset);
+            Ruby.Class.DefineMethod(Class, "fade_in_length", fade_in_lengthget);
+            Ruby.Class.DefineMethod(Class, "fade_in_length=", fade_in_lengthset);
+            Ruby.Class.DefineMethod(Class, "fade_out_length", fade_out_lengthget);
+            Ruby.Class.DefineMethod(Class, "fade_out_length=", fade_out_lengthset);
+            Ruby.Class.DefineMethod(Class, "length", length);
+            Ruby.Class.DefineMethod(Class, "playing?", playing);
         }
 
-        protected static IntPtr allocate(IntPtr Class)
+        static IntPtr initialize(IntPtr Self, IntPtr Args)
         {
-            return Internal.rb_funcallv(Class, Internal.rb_intern("allocate"), 0);
-        }
-
-        protected static IntPtr _new(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr obj = allocate(self);
-            Internal.rb_funcallv(obj, Internal.rb_intern("initialize"), Args.Length, Args.Rubify());
-            return obj;
-        }
-
-        protected static IntPtr initialize(IntPtr self, IntPtr _args)
-        {
-            RubyArray Args = new RubyArray(_args);
-            IntPtr filename = IntPtr.Zero;
-            IntPtr volume = Internal.LONG2NUM(100);
-            if (Args.Length == 1 || Args.Length == 2)
+            Ruby.Array.Expect(Args, 1, 2, 3);
+            long len = Ruby.Array.Length(Args);
+            Ruby.Array.Expect(Args, 0, "String");
+            Ruby.SetIVar(Self, "@filename", Ruby.Array.Get(Args, 0));
+            string Filename = Ruby.String.FromPtr(Ruby.Array.Get(Args, 0));
+            int Volume = 100;
+            int Pitch = 0;
+            if (len >= 2)
             {
-                filename = Args[0].Pointer;
-                if (Args.Length == 2) volume = Args[1].Pointer;
+                Ruby.Array.Expect(Args, 1, "Integer");
+                Ruby.SetIVar(Self, "@volume", Ruby.Array.Get(Args, 1));
+                Volume = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 1));
             }
-            else ScanArgs(1, Args);
-
-            Internal.SetIVar(self, "@filename", filename);
-            Internal.SetIVar(self, "@volume", volume);
-            Internal.SetIVar(self, "@position", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@pan", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@fade_in_length", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@fade_out_length", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@loop", Internal.QFalse);
-            Internal.SetIVar(self, "@loop_start_position", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@loop_end_position", Internal.LONG2NUM(0));
-            Internal.SetIVar(self, "@loop_times", Internal.LONG2NUM(-1));
-            Internal.SetIVar(self, "@autodispose", Internal.QTrue);
-            Internal.SetIVar(self, "@paused", Internal.QFalse);
-
-            odl.Sound sound = new odl.Sound(new RubyString(filename).ToString(), (int) Internal.NUM2LONG(volume));
-            sound.OnStopped += delegate (odl.BaseEventArgs e)
+            else
             {
-                if (Internal.GetIVar(self, "@autodispose") == Internal.QTrue)
-                {
-                    sound.Dispose();
-                }
-            };
-            if (SoundDictionary.ContainsKey(self))
-            {
-                SoundDictionary[self].Dispose();
-                SoundDictionary.Remove(self);
+                Ruby.SetIVar(Self, "@volume", Ruby.Integer.ToPtr(100));
             }
-            SoundDictionary.Add(self, sound);
-
-            return self;
-        }
-
-        protected static IntPtr autodisposeget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@autodispose");
-        }
-
-        protected static IntPtr autodisposeset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            return Internal.SetIVar(self, "@autodispose", Args[0].Pointer);
-        }
-
-        protected static IntPtr play(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            Internal.rb_funcallv(Audio.Module, Internal.rb_intern("play"), 1, new IntPtr[] { self });
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr stop(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            SoundDictionary[self].Stop();
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr pause(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            SoundDictionary[self].Pause();
-            Internal.SetIVar(self, "@paused", Internal.QTrue);
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr paused(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@paused");
-        }
-
-        protected static IntPtr resume(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            SoundDictionary[self].Resume();
-            Internal.SetIVar(self, "@paused", Internal.QFalse);
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr filenameget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@filename");
-        }
-
-        protected static IntPtr volumeget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@volume");
-        }
-
-        protected static IntPtr volumeset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].Volume = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@volume", Args[0].Pointer);
-        }
-
-        protected static IntPtr positionget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@position");
-        }
-
-        protected static IntPtr positionset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].Position = (uint) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@position", Args[0].Pointer);
-        }
-
-        protected static IntPtr panget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@pan");
-        }
-
-        protected static IntPtr panset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].Pan = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@pan", Args[0].Pointer);
-        }
-
-        protected static IntPtr fade_in_lengthget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@fade_in_length");
-        }
-
-        protected static IntPtr fade_in_lengthset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].FadeInLength = (uint) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@fade_in_length", Args[0].Pointer);
-        }
-
-        protected static IntPtr fade_out_lengthget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@fade_out_length");
-        }
-
-        protected static IntPtr fade_out_lengthset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].FadeOutLength = (uint) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@fade_out_length", Args[0].Pointer);
-        }
-
-        protected static IntPtr loopget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@loopget");
-        }
-
-        protected static IntPtr loopset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].Loop = Args[0].Pointer == Internal.QTrue;
-            return Internal.SetIVar(self, "@loop", Args[0].Pointer);
-        }
-
-        protected static IntPtr loop_start_positionget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@loop_start_position");
-        }
-
-        protected static IntPtr loop_start_positionset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].LoopStartPosition = (uint) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@loop_start_position", Args[0].Pointer);
-        }
-
-        protected static IntPtr loop_end_positionget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@loop_end_position");
-        }
-
-        protected static IntPtr loop_end_positionset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].LoopEndPosition = (uint) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@loop_end_position", Args[0].Pointer);
-        }
-
-        protected static IntPtr loop_timesget(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            return Internal.GetIVar(self, "@loop_times");
-        }
-
-        protected static IntPtr loop_timesset(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(1, Args);
-            SoundDictionary[self].LoopTimes = (int) Internal.NUM2LONG(Args[0].Pointer);
-            return Internal.SetIVar(self, "@loop_times", Args[0].Pointer);
-        }
-
-        protected static IntPtr dispose(IntPtr self, IntPtr _args)
-        {
-            GuardDisposed(self);
-            RubyArray Args = new RubyArray(_args);
-            ScanArgs(0, Args);
-            SoundDictionary[self].Dispose();
-            return Internal.QTrue;
-        }
-
-        protected static IntPtr disposed(IntPtr self, IntPtr _args)
-        {
-            if (_args != IntPtr.Zero)
+            if (len >= 3)
             {
-                RubyArray Args = new RubyArray(_args);
-                ScanArgs(0, Args);
+                Ruby.Array.Expect(Args, 2, "Integer");
+                Ruby.SetIVar(Self, "@pitch", Ruby.Array.Get(Args, 2));
+                Pitch = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 2));
             }
-            return Internal.GetIVar(self, "@disposed") == Internal.QTrue ? Internal.QTrue : Internal.QFalse;
+            else Ruby.SetIVar(Self, "@pitch", Ruby.Integer.ToPtr(0));
+            
+            if (SoundDictionary.ContainsKey(Self))
+            {
+                SoundDictionary[Self].Stop();
+                SoundDictionary.Remove(Self);
+            }
+
+            odl.Sound sound = new odl.Sound(Filename, Volume, Pitch);
+            Ruby.SetIVar(Self, "@length", Ruby.Integer.ToPtr(sound.Length));
+
+            SoundDictionary.Add(Self, sound);
+            return Self;
         }
 
-        public static void GuardDisposed(IntPtr self)
+        static IntPtr filenameget(IntPtr Self, IntPtr Args)
         {
-            if (disposed(self, IntPtr.Zero) == Internal.QTrue)
-            {
-                Internal.rb_raise(Internal.rb_eRuntimeError.Pointer, "sound already disposed");
-            }
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@filename");
         }
-    }*/
+
+        static IntPtr volumeget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@volume");
+        }
+
+        static IntPtr volumeset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int Volume = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].Volume = Volume;
+            return Ruby.SetIVar(Self, "@volume", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr pitchget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@pitch");
+        }
+
+        static IntPtr pitchset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int Pitch = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].Pitch = Pitch;
+            return Ruby.SetIVar(Self, "@pitch", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr sample_rateget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@sample_rate");
+        }
+
+        static IntPtr sample_rateset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int SampleRate = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].SampleRate = SampleRate;
+            return Ruby.SetIVar(Self, "@sample_rate", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr panget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@pan");
+        }
+
+        static IntPtr panset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int Pan = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].Pan = Pan;
+            return Ruby.SetIVar(Self, "@pan", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr positionget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@position");
+        }
+
+        static IntPtr positionset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int Position = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].Position = Position;
+            return Ruby.SetIVar(Self, "@position", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr loopingget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@looping");
+        }
+
+        static IntPtr loopingset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass", "NilClass");
+            bool Looping = Ruby.Array.Get(Args, 0) == Ruby.True;
+            SoundDictionary[Self].Looping = Looping;
+            return Ruby.SetIVar(Self, "@position", Ruby.Array.Get(Args, 0) == Ruby.True ? Ruby.True : Ruby.False);
+        }
+
+        static IntPtr loop_startget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@loop_start");
+        }
+
+        static IntPtr loop_startset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int LoopStart = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].LoopStart = LoopStart;
+            return Ruby.SetIVar(Self, "@loop_start", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr loop_endget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@loop_end");
+        }
+
+        static IntPtr loop_endset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int LoopEnd = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].LoopEnd = LoopEnd;
+            return Ruby.SetIVar(Self, "@loop_end", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr fade_in_lengthget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@fade_in_length");
+        }
+
+        static IntPtr fade_in_lengthset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int FadeInLength = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].FadeInLength = FadeInLength;
+            return Ruby.SetIVar(Self, "@fade_in_length", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr fade_out_lengthget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@fade_out_length");
+        }
+
+        static IntPtr fade_out_lengthset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Integer");
+            int FadeOutLength = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
+            SoundDictionary[Self].FadeOutLength = FadeOutLength;
+            return Ruby.SetIVar(Self, "@fade_out_length", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr length(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@length");
+        }
+
+        static IntPtr playing(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return SoundDictionary[Self].Playing ? Ruby.True : Ruby.False;
+        }
+    }
 }

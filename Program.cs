@@ -59,7 +59,7 @@ namespace peridot
                 System.Create();
                 Input.Create();
                 Audio.Create();
-                //Sound.Create();
+                Sound.Create();
                 Viewport.Create();
                 Sprite.Create();
                 Bitmap.Create();
