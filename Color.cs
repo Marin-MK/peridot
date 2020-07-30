@@ -147,8 +147,8 @@ namespace peridot
             if (Ruby.Array.Is(Args, 0, "Float"))
             {
                 double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) R = Ruby.Float.ToPtr(0);
-                else if (v > 255) R = Ruby.Float.ToPtr(255);
+                if (v < 0) { v = 0; R = Ruby.Float.ToPtr(0); }
+                else if (v > 255) { v = 255; R = Ruby.Float.ToPtr(255); }
                 else R = Ruby.Array.Get(Args, 0);
                 realr = (byte) Math.Round(v);
             }
@@ -156,8 +156,8 @@ namespace peridot
             {
                 Ruby.Array.Expect(Args, 0, "Integer");
                 int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) R = Ruby.Integer.ToPtr(0);
-                else if (v > 255) R = Ruby.Integer.ToPtr(255);
+                if (v < 0) { v = 0; R = Ruby.Integer.ToPtr(0); }
+                else if (v > 255) { v = 255; R = Ruby.Integer.ToPtr(255); }
                 else R = Ruby.Array.Get(Args, 0);
                 realr = (byte) v;
             }
@@ -186,8 +186,8 @@ namespace peridot
             if (Ruby.Array.Is(Args, 0, "Float"))
             {
                 double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) G = Ruby.Float.ToPtr(0);
-                else if (v > 255) G = Ruby.Float.ToPtr(255);
+                if (v < 0) { v = 0; G = Ruby.Float.ToPtr(0); }
+                else if (v > 255) { v = 255; G = Ruby.Float.ToPtr(255); }
                 else G = Ruby.Array.Get(Args, 0);
                 realg = (byte) Math.Round(v);
             }
@@ -195,8 +195,8 @@ namespace peridot
             {
                 Ruby.Array.Expect(Args, 0, "Integer");
                 int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) G = Ruby.Integer.ToPtr(0);
-                else if (v > 255) G = Ruby.Integer.ToPtr(255);
+                if (v < 0) { v = 0; G = Ruby.Integer.ToPtr(0); }
+                else if (v > 255) { v = 255; G = Ruby.Integer.ToPtr(255); }
                 else G = Ruby.Array.Get(Args, 0);
                 realg = (byte) v;
             }
@@ -225,8 +225,8 @@ namespace peridot
             if (Ruby.Array.Is(Args, 0, "Float"))
             {
                 double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) B = Ruby.Float.ToPtr(0);
-                else if (v > 255) B = Ruby.Float.ToPtr(255);
+                if (v < 0) { v = 0; B = Ruby.Float.ToPtr(0); }
+                else if (v > 255) { v = 255; B = Ruby.Float.ToPtr(255); }
                 else B = Ruby.Array.Get(Args, 0);
                 realb = (byte) Math.Round(v);
             }
@@ -234,8 +234,8 @@ namespace peridot
             {
                 Ruby.Array.Expect(Args, 0, "Integer");
                 int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) B = Ruby.Integer.ToPtr(0);
-                else if (v > 255) B = Ruby.Integer.ToPtr(255);
+                if (v < 0) { v = 0; B = Ruby.Integer.ToPtr(0); }
+                else if (v > 255) { v = 255; B = Ruby.Integer.ToPtr(255); }
                 else B = Ruby.Array.Get(Args, 0);
                 realb = (byte) v;
             }
@@ -264,8 +264,8 @@ namespace peridot
             if (Ruby.Array.Is(Args, 0, "Float"))
             {
                 double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) A = Ruby.Float.ToPtr(0);
-                else if (v > 255) A = Ruby.Float.ToPtr(255);
+                if (v < 0) { v = 0; A = Ruby.Float.ToPtr(0); }
+                else if (v > 255) { v = 255; A = Ruby.Float.ToPtr(255); }
                 else A = Ruby.Array.Get(Args, 0);
                 reala = (byte) Math.Round(v);
             }

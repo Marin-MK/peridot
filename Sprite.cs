@@ -348,8 +348,8 @@ namespace peridot
             if (Ruby.Array.Is(Args, 0, "Float"))
             {
                 double v = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) opacity = Ruby.Float.ToPtr(0);
-                else if (v > 255) opacity = Ruby.Float.ToPtr(255);
+                if (v < 0) { v = 0; opacity = Ruby.Float.ToPtr(0); }
+                else if (v > 255) { v = 255; opacity = Ruby.Float.ToPtr(255); }
                 else opacity = Ruby.Array.Get(Args, 0);
                 realopacity = (byte) Math.Round(v);
             }
@@ -357,8 +357,8 @@ namespace peridot
             {
                 Ruby.Array.Expect(Args, 0, "Integer");
                 int v = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
-                if (v < 0) opacity = Ruby.Integer.ToPtr(0);
-                else if (v > 255) opacity = Ruby.Integer.ToPtr(255);
+                if (v < 0) { v = 0; opacity = Ruby.Integer.ToPtr(0); }
+                else if (v > 255) { v = 255; opacity = Ruby.Integer.ToPtr(255); }
                 else opacity = Ruby.Array.Get(Args, 0);
                 realopacity = (byte) v;
             }
