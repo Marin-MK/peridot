@@ -81,10 +81,6 @@ namespace peridot
             {
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.X = x;
             }
-            if (Ruby.GetIVar(Self, "@__viewport__") != Ruby.Nil)
-            {
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].X = x;
-            }
             return Ruby.SetIVar(Self, "@x", Ruby.Array.Get(Args, 0));
         }
 
@@ -110,10 +106,6 @@ namespace peridot
             if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Y = y;
-            }
-            if (Ruby.GetIVar(Self, "@__viewport__") != Ruby.Nil)
-            {
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Y = y;
             }
             return Ruby.SetIVar(Self, "@y", Ruby.Array.Get(Args, 0));
         }
@@ -141,10 +133,6 @@ namespace peridot
             {
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Width = w;
             }
-            if (Ruby.GetIVar(Self, "@__viewport__") != Ruby.Nil)
-            {
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Width = w;
-            }
             return Ruby.SetIVar(Self, "@width", Ruby.Array.Get(Args, 0));
         }
 
@@ -170,10 +158,6 @@ namespace peridot
             if (Ruby.GetIVar(Self, "@__sprite__") != Ruby.Nil)
             {
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Height = h;
-            }
-            if (Ruby.GetIVar(Self, "@__viewport__") != Ruby.Nil)
-            {
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Height = h;
             }
             return Ruby.SetIVar(Self, "@height", Ruby.Array.Get(Args, 0));
         }
@@ -231,13 +215,6 @@ namespace peridot
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Y = y;
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Width = w;
                 Sprite.SpriteDictionary[Ruby.GetIVar(Self, "@__sprite__")].SrcRect.Height = h;
-            }
-            if (Ruby.GetIVar(Self, "@__viewport__") != Ruby.Nil)
-            {
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].X = x;
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Y = y;
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Width = w;
-                Viewport.ViewportDictionary[Ruby.GetIVar(Self, "@__viewport__")].Height = h;
             }
             return Self;
         }

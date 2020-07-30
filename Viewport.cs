@@ -15,8 +15,6 @@ namespace peridot
         {
             Class = Ruby.Class.Define("Viewport");
             Ruby.Class.DefineMethod(Class, "initialize", initialize);
-            Ruby.Class.DefineMethod(Class, "rect", rectget);
-            Ruby.Class.DefineMethod(Class, "rect=", rectset);
             Ruby.Class.DefineMethod(Class, "x", xget);
             Ruby.Class.DefineMethod(Class, "x=", xset);
             Ruby.Class.DefineMethod(Class, "y", yget);
@@ -39,14 +37,18 @@ namespace peridot
 
         static IntPtr initialize(IntPtr Self, IntPtr Args)
         {
-            Ruby.Array.Expect(Args, 1, 4);
-            IntPtr rect = IntPtr.Zero;
+            Ruby.Array.Expect(Args, 0, 1, 4);
             int x = 0,
                 y = 0,
                 w = 0,
                 h = 0;
             long len = Ruby.Array.Length(Args);
-            if (len == 1)
+            if (len == 0)
+            {
+                w = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(System.Module, "@width"));
+                h = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(System.Module, "@height"));
+            }
+            else if (len == 1)
             {
                 Ruby.Array.Expect(Args, 0, "Rect");
                 if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@x", "Float")) x = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
@@ -57,8 +59,6 @@ namespace peridot
                 else w = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
                 if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@height", "Float")) h = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
                 else h = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
-                rect = Ruby.Array.Get(Args, 0);
-                Ruby.SetIVar(Self, "@rect", rect);
             }
             else if (len == 4)
             {
@@ -86,14 +86,11 @@ namespace peridot
                     Ruby.Array.Expect(Args, 3, "Integer");
                     h = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 3));
                 }
-                rect = Rect.CreateRect(new odl.Rect(0, 0, 0, 0));
-                Ruby.SetIVar(Self, "@rect", rect);
-                Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@x", Ruby.Array.Get(Args, 0));
-                Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@y", Ruby.Array.Get(Args, 1));
-                Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@width", Ruby.Array.Get(Args, 2));
-                Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@height", Ruby.Array.Get(Args, 3));
             }
-            Ruby.SetIVar(rect, "@__viewport__", Self);
+            Ruby.SetIVar(Self, "@x", Ruby.Integer.ToPtr(x));
+            Ruby.SetIVar(Self, "@y", Ruby.Integer.ToPtr(y));
+            Ruby.SetIVar(Self, "@width", Ruby.Integer.ToPtr(w));
+            Ruby.SetIVar(Self, "@height", Ruby.Integer.ToPtr(h));
             Ruby.SetIVar(Self, "@ox", Ruby.Integer.ToPtr(0));
             Ruby.SetIVar(Self, "@oy", Ruby.Integer.ToPtr(0));
             Ruby.SetIVar(Self, "@z", Ruby.Integer.ToPtr(0));
@@ -113,44 +110,11 @@ namespace peridot
             return Self;
         }
 
-        static IntPtr rectget(IntPtr Self, IntPtr Args)
-        {
-            GuardDisposed(Self);
-            Ruby.Array.Expect(Args, 0);
-            return Ruby.GetIVar(Self, "@rect");
-        }
-
-        static IntPtr rectset(IntPtr Self, IntPtr Args)
-        {
-            GuardDisposed(Self);
-            Ruby.Array.Expect(Args, 1);
-            Ruby.Array.Expect(Args, 0, "Rect");
-            Ruby.SetIVar(Ruby.GetIVar(Self,"@rect"), "@__viewport__", Ruby.Nil);
-            int x = 0,
-                y = 0,
-                w = 0,
-                h = 0;
-            if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@x", "Float")) x = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
-            else x = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
-            if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@y", "Float")) y = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@y"));
-            else y = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
-            if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@width", "Float")) w = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@width"));
-            else w = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
-            if (Ruby.IVarIs(Ruby.Array.Get(Args, 0), "@height", "Float")) h = Ruby.Float.RoundFromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@height"));
-            else h = (int) Ruby.Integer.FromPtr(Ruby.GetIVar(Ruby.Array.Get(Args, 0), "@x"));
-            ViewportDictionary[Self].X = x;
-            ViewportDictionary[Self].Y = y;
-            ViewportDictionary[Self].Width = w;
-            ViewportDictionary[Self].Height = h;
-            Ruby.SetIVar(Ruby.Array.Get(Args, 0), "@__viewport__", Self);
-            return Ruby.SetIVar(Self, "@rect", Ruby.Array.Get(Args, 0));
-        }
-
         static IntPtr xget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
             Ruby.Array.Expect(Args, 0);
-            return Ruby.GetIVar(Ruby.GetIVar(Self, "@rect"), "@x");
+            return Ruby.GetIVar(Self, "@x");
         }
 
         static IntPtr xset(IntPtr Self, IntPtr Args)
@@ -166,14 +130,14 @@ namespace peridot
                 Ruby.Array.Expect(Args, 0, "Integer");
                 ViewportDictionary[Self].X = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
             }
-            return Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@x", Ruby.Array.Get(Args, 0));
+            return Ruby.SetIVar(Self, "@x", Ruby.Array.Get(Args, 0));
         }
 
         static IntPtr yget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
             Ruby.Array.Expect(Args, 0);
-            return Ruby.GetIVar(Ruby.GetIVar(Self, "@rect"), "@y");
+            return Ruby.GetIVar(Self, "@y");
         }
 
         static IntPtr yset(IntPtr Self, IntPtr Args)
@@ -189,14 +153,14 @@ namespace peridot
                 Ruby.Array.Expect(Args, 0, "Integer");
                 ViewportDictionary[Self].Y = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
             }
-            return Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@y", Ruby.Array.Get(Args, 0));
+            return Ruby.SetIVar(Self, "@y", Ruby.Array.Get(Args, 0));
         }
 
         static IntPtr widthget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
             Ruby.Array.Expect(Args, 0);
-            return Ruby.GetIVar(Ruby.GetIVar(Self, "@rect"), "@width");
+            return Ruby.GetIVar(Self, "@width");
         }
 
         static IntPtr widthset(IntPtr Self, IntPtr Args)
@@ -212,14 +176,14 @@ namespace peridot
                 Ruby.Array.Expect(Args, 0, "Integer");
                 ViewportDictionary[Self].Width = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
             }
-            return Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@width", Ruby.Array.Get(Args, 0));
+            return Ruby.SetIVar(Self, "@width", Ruby.Array.Get(Args, 0));
         }
 
         static IntPtr heightget(IntPtr Self, IntPtr Args)
         {
             GuardDisposed(Self);
             Ruby.Array.Expect(Args, 0);
-            return Ruby.GetIVar(Ruby.GetIVar(Self, "@rect"), "@height");
+            return Ruby.GetIVar(Self, "@height");
         }
 
         static IntPtr heightset(IntPtr Self, IntPtr Args)
@@ -235,7 +199,7 @@ namespace peridot
                 Ruby.Array.Expect(Args, 0, "Integer");
                 ViewportDictionary[Self].Height = (int) Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0));
             }
-            return Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@height", Ruby.Array.Get(Args, 0));
+            return Ruby.SetIVar(Self, "@height", Ruby.Array.Get(Args, 0));
         }
 
         static IntPtr zget(IntPtr Self, IntPtr Args)
@@ -331,7 +295,6 @@ namespace peridot
             Ruby.Array.Expect(Args, 0);
             ViewportDictionary[Self].Dispose();
             ViewportDictionary.Remove(Self);
-            Ruby.SetIVar(Ruby.GetIVar(Self, "@rect"), "@__viewport__", Ruby.Nil);
             Ruby.SetIVar(Ruby.GetIVar(Self, "@color"), "@__viewport__", Ruby.Nil);
             return Ruby.SetIVar(Self, "@disposed", Ruby.True);
         }
