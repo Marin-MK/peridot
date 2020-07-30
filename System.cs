@@ -1,5 +1,4 @@
 ﻿using System;
-using odl;
 using rubydotnet;
 
 namespace peridot
@@ -23,6 +22,8 @@ namespace peridot
             Ruby.Module.DefineClassMethod(Module, "height=", heightset);
             Ruby.Module.DefineClassMethod(Module, "frame_count", frame_countget);
             Ruby.Module.DefineClassMethod(Module, "frame_count=", frame_countset);
+            Ruby.Module.DefineClassMethod(Module, "vsync", vsyncget);
+            Ruby.Module.DefineClassMethod(Module, "vsync=", vsyncset);
             Ruby.Module.DefineClassMethod(Module, "show_overlay", show_overlay);
             Ruby.Module.DefineClassMethod(Module, "hide_overlay", hide_overlay);
             Ruby.Module.DefineClassMethod(Module, "overlay_shown?", overlay_shown);
@@ -127,6 +128,20 @@ namespace peridot
             Ruby.Array.Expect(Args, 1);
             Ruby.Array.Expect(Args, 0, "Integer");
             return Ruby.SetIVar(Self, "@frame_count", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr vsyncget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Program.MainWindow.GetVSync() ? Ruby.True : Ruby.False;
+        }
+
+        static IntPtr vsyncset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass");
+            Program.MainWindow.SetVSync(Ruby.Array.Get(Args, 0) == Ruby.True);
+            return Ruby.Array.Get(Args, 0);
         }
 
         static IntPtr show_overlay(IntPtr Self, IntPtr Args)
