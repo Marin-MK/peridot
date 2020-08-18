@@ -16,14 +16,14 @@ namespace peridot
         
         public static void Start(string Path, bool InitializeEverything)
         {
-            string OldWorkingDirectory = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(Path);
+            if (InitializeEverything) InitializeOdl();
 
             InitializeRubyClasses();
 
-            LoadConfig();
+            string OldWorkingDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(Path);
 
-            if (InitializeEverything) InitializeOdl();
+            LoadConfig();
 
             ValidateEntryPoint();
 
