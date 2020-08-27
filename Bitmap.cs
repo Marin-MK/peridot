@@ -579,7 +579,7 @@ namespace peridot
                 BitmapDictionary[Self].DrawText(text, new odl.Rect(x + 1, y + 1, w, h), outline_color, options);
             }
             BitmapDictionary[Self].DrawText(text, new odl.Rect(x, y, w, h), color, options);
-            SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[Self].Texture, SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            odl.SDL2.SDL.SDL_SetTextureBlendMode(BitmapDictionary[Self].Texture, odl.SDL2.SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             AutoLock(Self);
             return Ruby.True;
         }

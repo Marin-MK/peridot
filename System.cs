@@ -71,8 +71,8 @@ namespace peridot
             int fps = Config.FrameRate;
             if (Config.VSync)
             {
-                SDL2.SDL.SDL_DisplayMode mode = new SDL2.SDL.SDL_DisplayMode();
-                SDL2.SDL.SDL_GetWindowDisplayMode(Program.MainWindow.SDL_Window, out mode);
+                odl.SDL2.SDL.SDL_DisplayMode mode = new odl.SDL2.SDL.SDL_DisplayMode();
+                odl.SDL2.SDL.SDL_GetWindowDisplayMode(Program.MainWindow.SDL_Window, out mode);
                 fps = mode.refresh_rate;
             }
             Ruby.SetIVar(Module, "@frame_rate", Ruby.Integer.ToPtr(fps));
@@ -228,26 +228,26 @@ namespace peridot
         {
             Ruby.Array.Expect(Args, 1);
             Ruby.Array.Expect(Args, 0, "Integer");
-            SDL2.SDL.SDL_Delay((uint) (1000d / Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@frame_rate")) * Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0))));
+            odl.SDL2.SDL.SDL_Delay((uint) (1000d / Ruby.Integer.FromPtr(Ruby.GetIVar(Self, "@frame_rate")) * Ruby.Integer.FromPtr(Ruby.Array.Get(Args, 0))));
             return Ruby.True;
         }
         
         static IntPtr windows(IntPtr Self, IntPtr Args)
         {
             Ruby.Array.Expect(Args, 0);
-            return SDL2.SDL.SDL_GetPlatform() == "Windows" ? Ruby.True : Ruby.False;
+            return odl.Graphics.Platform == odl.Platform.Windows ? Ruby.True : Ruby.False;
         }
 
         static IntPtr linux(IntPtr Self, IntPtr Args)
         {
             Ruby.Array.Expect(Args, 0);
-            return SDL2.SDL.SDL_GetPlatform() == "Linux" ? Ruby.True : Ruby.False;
+            return odl.Graphics.Platform == odl.Platform.Linux ? Ruby.True : Ruby.False;
         }
 
         static IntPtr mac(IntPtr Self, IntPtr Args)
         {
             Ruby.Array.Expect(Args, 0);
-            return SDL2.SDL.SDL_GetPlatform() == "Mac OS X" ? Ruby.True : Ruby.False;
+            return odl.Graphics.Platform == odl.Platform.MacOS ? Ruby.True : Ruby.False;
         }
     }
 }

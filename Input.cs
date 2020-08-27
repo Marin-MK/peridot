@@ -1,6 +1,6 @@
 ﻿using System;
 using rubydotnet;
-using static SDL2.SDL;
+using static odl.SDL2.SDL;
 
 namespace peridot
 {

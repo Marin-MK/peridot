@@ -23,9 +23,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>bin\x64\Debug\netcoreapp3.1\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SDL2-CS">
-      <HintPath>..\odl\bin\x64\Debug\netcoreapp3.1\SDL2-CS.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

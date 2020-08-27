@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using static SDL2.SDL;
+using System.Runtime.InteropServices;
+using static odl.SDL2.SDL;
 
 namespace peridot
 {
@@ -27,20 +28,23 @@ namespace peridot
             if (this.IconType == 1) boxdata.flags = SDL_MessageBoxFlags.SDL_MESSAGEBOX_INFORMATION;
             else if (this.IconType == 2) boxdata.flags = SDL_MessageBoxFlags.SDL_MESSAGEBOX_WARNING;
             else if (this.IconType == 3) boxdata.flags = SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR;
-            boxdata.buttons = new SDL_MessageBoxButtonData[Buttons.Count];
+            SDL_MessageBoxButtonData[] buttons = new SDL_MessageBoxButtonData[Buttons.Count];
             for (int i = 0; i < Buttons.Count; i++)
             {
-                boxdata.buttons[i] = new SDL_MessageBoxButtonData();
-                boxdata.buttons[i].text = Buttons[i];
-                boxdata.buttons[i].buttonid = 0;
-                if (i == 0) boxdata.buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
-                else if (i == Buttons.Count - 1) boxdata.buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+                buttons[i] = new SDL_MessageBoxButtonData();
+                buttons[i].text = Buttons[i];
+                buttons[i].buttonid = 0;
+                if (i == 0) buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+                else if (i == Buttons.Count - 1) buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
             }
             boxdata.message = this.Message;
             boxdata.numbuttons = Buttons.Count;
             boxdata.title = this.Title;
             boxdata.window = this.Parent == null ? IntPtr.Zero : this.Parent.SDL_Window;
             int result = -1;
+            IntPtr buttonptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SDL_MessageBoxButtonData)) * buttons.Length);
+            Marshal.StructureToPtr(buttons, buttonptr, false);
+            boxdata.buttons = buttonptr;
             SDL_ShowMessageBox(ref boxdata, out result);
             return result;
         }
