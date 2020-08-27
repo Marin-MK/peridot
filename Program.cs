@@ -193,9 +193,14 @@ namespace peridot
         public static void PrepareLoadPath()
         {
             IntPtr load_path = Ruby.GetGlobal("$LOAD_PATH");
-            for (int i = 0; i < Config.RubyLoadPath.Count; i++)
+            Ruby.Funcall(load_path, "push", Ruby.String.ToPtr("lib/ruby/2.7.0"));
+            if (Graphics.Platform == odl.Platform.Windows)
             {
-                Ruby.Funcall(load_path, "push", Ruby.String.ToPtr(Config.RubyLoadPath[i]));
+                Ruby.Funcall(load_path, "push", Ruby.String.ToPtr("lib/ruby/2.7.0/x64-mingw32"));
+            }
+            else if (Graphics.Platform == odl.Platform.Linux)
+            {
+                Ruby.Funcall(load_path, "push", Ruby.String.ToPtr("lib/ruby/2.7.0/x86_64-linux"));
             }
             if (!string.IsNullOrEmpty(Config.MainDirectory))
             {

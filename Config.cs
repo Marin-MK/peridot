@@ -17,9 +17,8 @@ namespace peridot
         public static bool WindowResizable = true;
         public static double WindowScale = 1d;
         public static bool MaintainAspectRatio = true;
-        public static string Script = null;
+        public static string Script = "scripts/entry.rb";
         public static odl.Color BackgroundColor = odl.Color.BLACK;
-        public static List<string> RubyLoadPath = new List<string>();
         public static string MainDirectory = null;
         public static bool FakeWin32API = false;
 
@@ -96,15 +95,6 @@ namespace peridot
                             case "background_color":
                                 EnsureType(typeof(JObject), value, key);
                                 BackgroundColor = ParseColor(((JObject) value).ToObject<Dictionary<string, object>>(), key);
-                                break;
-                            case "ruby_load_path":
-                                EnsureType(typeof(JArray), value, key);
-                                List<object> paths = ((JArray) value).ToObject<List<object>>();
-                                foreach (object path in paths)
-                                {
-                                    if (!(path is string)) Program.Error($"Expected a value of type String, but got a value of type {path.GetType().Name} in element in key 'ruby_load_path'");
-                                    RubyLoadPath.Add((string) path);
-                                }
                                 break;
                             case "main_directory":
                                 EnsureType(typeof(string), value, key);

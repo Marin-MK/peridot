@@ -8,10 +8,7 @@
     <StartupObject />
     <Configurations>Debug</Configurations>
     <NoWin32Manifest>true</NoWin32Manifest>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

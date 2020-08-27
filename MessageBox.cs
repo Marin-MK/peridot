@@ -22,7 +22,7 @@ namespace peridot
             this.Buttons = Buttons;
         }
 
-        public int Show()
+        public unsafe int Show()
         {
             SDL_MessageBoxData boxdata = new SDL_MessageBoxData();
             if (this.IconType == 1) boxdata.flags = SDL_MessageBoxFlags.SDL_MESSAGEBOX_INFORMATION;
@@ -32,7 +32,7 @@ namespace peridot
             for (int i = 0; i < Buttons.Count; i++)
             {
                 buttons[i] = new SDL_MessageBoxButtonData();
-                buttons[i].text = Buttons[i];
+                buttons[i].text = StrToPtr(Buttons[i]);
                 buttons[i].buttonid = 0;
                 if (i == 0) buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
                 else if (i == Buttons.Count - 1) buttons[i].flags = SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
@@ -42,9 +42,10 @@ namespace peridot
             boxdata.title = this.Title;
             boxdata.window = this.Parent == null ? IntPtr.Zero : this.Parent.SDL_Window;
             int result = -1;
-            IntPtr buttonptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SDL_MessageBoxButtonData)) * buttons.Length);
-            Marshal.StructureToPtr(buttons, buttonptr, false);
-            boxdata.buttons = buttonptr;
+            fixed (SDL_MessageBoxButtonData* buttonptr = &buttons[0])
+            {
+                boxdata.buttons = (IntPtr) buttonptr;
+            }
             SDL_ShowMessageBox(ref boxdata, out result);
             return result;
         }
