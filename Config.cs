@@ -20,7 +20,6 @@ namespace peridot
         public static string Script = "scripts/core/entry.rb";
         public static odl.Color BackgroundColor = odl.Color.BLACK;
         public static string MainDirectory = null;
-        public static bool FakeWin32API = false;
 
         public static void LoadSettings(params string[] Filenames)
         {
@@ -99,10 +98,6 @@ namespace peridot
                             case "main_directory":
                                 EnsureType(typeof(string), value, key);
                                 MainDirectory = (string) value;
-                                break;
-                            case "fake_win32api":
-                                EnsureType(typeof(bool), value, key);
-                                FakeWin32API = Convert.ToBoolean(value);
                                 break;
                             default:
                                 Program.Error($"Unknown key in the config JSON: '{key}'");
