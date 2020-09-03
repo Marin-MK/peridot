@@ -24,6 +24,10 @@ namespace peridot
             Directory.SetCurrentDirectory(Path);
 
             LoadConfig();
+            if (!string.IsNullOrEmpty(Config.MainDirectory))
+            {
+                Ruby.Funcall(Ruby.GetConst(Ruby.Object.Class, "Dir"), "chdir", Ruby.String.ToPtr(Config.MainDirectory));
+            }
 
             ValidateEntryPoint();
 
@@ -201,10 +205,6 @@ namespace peridot
             else if (Graphics.Platform == odl.Platform.Linux)
             {
                 Ruby.Funcall(load_path, "push", Ruby.String.ToPtr("lib/ruby/2.7.0/x86_64-linux"));
-            }
-            if (!string.IsNullOrEmpty(Config.MainDirectory))
-            {
-                Ruby.Funcall(Ruby.GetConst(Ruby.Object.Class, "Dir"), "chdir", Ruby.String.ToPtr(Config.MainDirectory));
             }
         }
 

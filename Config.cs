@@ -13,11 +13,11 @@ namespace peridot
         public static int WindowWidth = 480;
         public static int WindowHeight = 320;
         public static string WindowIcon = null;
-        public static string WindowTitle = "peridot";
+        public static string WindowTitle = "Game";
         public static bool WindowResizable = true;
         public static double WindowScale = 1d;
         public static bool MaintainAspectRatio = true;
-        public static string Script = "scripts/entry.rb";
+        public static string Script = "scripts/core/entry.rb";
         public static odl.Color BackgroundColor = odl.Color.BLACK;
         public static string MainDirectory = null;
         public static bool FakeWin32API = false;
