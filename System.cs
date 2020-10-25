@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using odl.SDL2;
 using rubydotnet;
 
 namespace peridot
@@ -10,12 +12,17 @@ namespace peridot
         public static IntPtr MainViewport;
         static IntPtr OverlayViewport;
         static IntPtr OverlaySprite;
+        static bool ManualSync = false;
+        static int MillisecondsPerFrame = -1;
+        static Stopwatch FPSTimer = new Stopwatch();
 
         public static void Create()
         {
             Module = Ruby.Module.Define("System");
             Ruby.Module.DefineClassMethod(Module, "frame_rate", frame_rateget);
             Ruby.Module.DefineClassMethod(Module, "frame_rate=", frame_rateset);
+            Ruby.Module.DefineClassMethod(Module, "render_speed", render_speedget);
+            Ruby.Module.DefineClassMethod(Module, "render_speed=", render_speedset);
             Ruby.Module.DefineClassMethod(Module, "width", widthget);
             Ruby.Module.DefineClassMethod(Module, "width=", widthset);
             Ruby.Module.DefineClassMethod(Module, "height", heightget);
@@ -75,7 +82,14 @@ namespace peridot
                 odl.SDL2.SDL.SDL_GetWindowDisplayMode(Program.MainWindow.SDL_Window, out mode);
                 fps = mode.refresh_rate;
             }
+            else
+            {
+                ManualSync = true;
+                MillisecondsPerFrame = (int) Math.Ceiling(1d / fps);
+                FPSTimer.Start();
+            }
             Ruby.SetIVar(Module, "@frame_rate", Ruby.Integer.ToPtr(fps));
+            Ruby.SetIVar(Module, "@render_speed", Ruby.Float.ToPtr(1));
         }
 
         static IntPtr frame_rateget(IntPtr Self, IntPtr Args)
@@ -89,6 +103,37 @@ namespace peridot
             Ruby.Array.Expect(Args, 1);
             Ruby.Array.Expect(Args, 0, "Integer");
             return Ruby.SetIVar(Self, "@frame_rate", Ruby.Array.Get(Args, 0));
+        }
+
+        static IntPtr render_speedget(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 0);
+            return Ruby.GetIVar(Self, "@render_speed");
+        }
+
+        static IntPtr render_speedset(IntPtr Self, IntPtr Args)
+        {
+            Ruby.Array.Expect(Args, 1);
+            Ruby.Array.Expect(Args, 0, "Float");
+            double speed = Ruby.Float.FromPtr(Ruby.Array.Get(Args, 0));
+            if (speed == 1 && !Program.MainWindow.GetVSync())
+            {
+                Program.MainWindow.SetVSync(true);
+                ManualSync = false;
+                MillisecondsPerFrame = -1;
+                FPSTimer.Stop();
+            }
+            else if (speed != 1)
+            {
+                if (Program.MainWindow.GetVSync())
+                {
+                    Program.MainWindow.SetVSync(false);
+                    ManualSync = true;
+                    FPSTimer.Start();
+                }
+                MillisecondsPerFrame = (int) Math.Ceiling(1000d / speed / Config.FrameRate);
+            }
+            return Ruby.SetIVar(Self, "@render_speed", Ruby.Array.Get(Args, 0));
         }
 
         static IntPtr widthget(IntPtr Self, IntPtr Args)
@@ -140,7 +185,19 @@ namespace peridot
         {
             Ruby.Array.Expect(Args, 1);
             Ruby.Array.Expect(Args, 0, "TrueClass", "FalseClass");
-            Program.MainWindow.SetVSync(Ruby.Array.Get(Args, 0) == Ruby.True);
+            bool vsync = Ruby.Array.Get(Args, 0) == Ruby.True;
+            Program.MainWindow.SetVSync(vsync);
+            if (vsync)
+            {
+                ManualSync = false;
+                MillisecondsPerFrame = -1;
+            }
+            else
+            {
+                ManualSync = true;
+                double speed = Ruby.Float.FromPtr(Ruby.GetIVar(Self, "@render_speed"));
+                MillisecondsPerFrame = (int) Math.Ceiling(1000d / speed / Config.FrameRate);
+            }
             return Ruby.Array.Get(Args, 0);
         }
 
@@ -203,7 +260,7 @@ namespace peridot
         static IntPtr screenshot(IntPtr Self, IntPtr Args)
         {
             Ruby.Array.Expect(Args, 0);
-            return Bitmap.CreateBitmap(odl.Graphics.Windows[0].Screenshot());
+            return Bitmap.CreateBitmap(Program.MainWindow.Screenshot());
         }
 
         static IntPtr update(IntPtr Self, IntPtr Args)
@@ -211,6 +268,7 @@ namespace peridot
             Ruby.Array.Expect(Args, 0);
             if (!odl.Graphics.Initialized) Ruby.Raise(Ruby.ErrorType.SystemExit, "system stopped");
 
+            long start = FPSTimer.ElapsedMilliseconds;
             odl.Graphics.UpdateInput();
             odl.Graphics.UpdateWindows();
             try
@@ -220,6 +278,13 @@ namespace peridot
             catch (odl.BitmapLockedException)
             {
                 Ruby.Raise(Ruby.ErrorType.RuntimeError, "attempted to render a still unlocked bitmap");
+            }
+            if (ManualSync)
+            {
+                long end = FPSTimer.ElapsedMilliseconds;
+                long timediff = end - start;
+                long delay = MillisecondsPerFrame - timediff;
+                if (delay > 0) SDL.SDL_Delay((uint) delay);
             }
             return Ruby.True;
         }
