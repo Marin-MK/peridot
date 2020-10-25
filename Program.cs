@@ -175,7 +175,22 @@ namespace peridot
             }
 
             // Runs the script and returns raises a RuntimeError when window is closed.
-            Ruby.Load(Config.Script);
+            try
+            {
+                bool Success = Ruby.Load(Config.Script);
+                if (!Success)
+                {
+                    string exception = Ruby.FormatException();
+                    Console.WriteLine(exception);
+                    Error(exception);
+                }
+            }
+            catch (Exception ex)
+            {
+                string exception = "PERIDOT ERROR: " + ex.ToString() + "\n\n" + ex.StackTrace;
+                Console.WriteLine(exception);
+                Error(exception);
+            }
         }
 
         public static void CloseWindow()
@@ -216,7 +231,7 @@ namespace peridot
             for (int i = 0; i < len; i++)
             {
                 string value = Ruby.String.FromPtr(Ruby.Funcall(Ruby.Array.Get(Args, i), "inspect"));
-                for (int j = 0; j < value.Length / 96; j++)
+                for (int j = 1; j < value.Length / 96; j++)
                 {
                     value = value.Insert(j + j * 96, "\n");
                 }
@@ -228,7 +243,11 @@ namespace peridot
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n') newlines++;
-                if (newlines == 24) text = text.Substring(0, i) + "...";
+                if (newlines == 24)
+                {
+                    text = text.Substring(0, i) + "...";
+                    break;
+                }
             }
             new StandardBox(MainWindow, text).Show();
             return len > 1 ? Args : Ruby.Array.Get(Args, 0);
@@ -242,7 +261,7 @@ namespace peridot
             for (int i = 0; i < len; i++)
             {
                 string value = Ruby.String.FromPtr(Ruby.Funcall(Ruby.Array.Get(Args, i), "to_s"));
-                for (int j = 0; j < value.Length / 96; j++)
+                for (int j = 1; j < value.Length / 96; j++)
                 {
                     value = value.Insert(j + j * 96, "\n");
                 }
@@ -254,7 +273,11 @@ namespace peridot
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n') newlines++;
-                if (newlines == 24) text = text.Substring(0, i) + "...";
+                if (newlines == 24)
+                {
+                    text = text.Substring(0, i) + "...";
+                    break;
+                }
             }
             new StandardBox(MainWindow, text).Show();
             return len > 1 ? Args : Ruby.Array.Get(Args, 0);
