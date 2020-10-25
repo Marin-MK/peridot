@@ -598,12 +598,15 @@ namespace peridot
         {
             GuardDisposed(Self);
             Ruby.Array.Expect(Args, 0);
-            BitmapDictionary[Self].Dispose();
-            foreach (KeyValuePair<IntPtr, odl.Bitmap> kvp in BitmapDictionary)
+            if (BitmapDictionary.ContainsKey(Self))
             {
-                if (kvp.Value == BitmapDictionary[Self] && kvp.Key != Self)
+                BitmapDictionary[Self].Dispose();
+                foreach (KeyValuePair<IntPtr, odl.Bitmap> kvp in BitmapDictionary)
                 {
-                    Ruby.SetIVar(kvp.Key, "@disposed", Ruby.True);
+                    if (kvp.Value == BitmapDictionary[Self] && kvp.Key != Self)
+                    {
+                        Ruby.SetIVar(kvp.Key, "@disposed", Ruby.True);
+                    }
                 }
             }
             BitmapDictionary.Remove(Self);
