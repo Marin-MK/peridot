@@ -213,7 +213,7 @@ namespace peridot
             if (Ruby.Integer.FromPtr(Ruby.GetIVar(OverlaySprite, "@opacity")) == 255) return Ruby.False;
             if (frames == 0)
             {
-                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(0));
+                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(255));
                 return Ruby.True;
             }
             bool hasblock = Ruby.HasBlock();
@@ -238,7 +238,7 @@ namespace peridot
             if (Ruby.Integer.FromPtr(Ruby.GetIVar(OverlaySprite, "@opacity")) == 0) return Ruby.False;
             if (frames == 0)
             {
-                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(255));
+                Ruby.Funcall(OverlaySprite, "opacity=", Ruby.Integer.ToPtr(0));
                 return Ruby.True;
             }
             bool hasblock = Ruby.HasBlock();
